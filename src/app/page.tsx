@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { VisitCounter } from "@/components/VisitCounter";
 import MagneticCalculatorComponent from "@/components/magnetic/MagneticCalculator";
 import Phase2Wizard from "@/components/Phase2Wizard";
 import Phase3Dimensioning from "@/components/Phase3Dimensioning";
@@ -190,7 +191,8 @@ function AppContent() {
         {/* Header */}
         {/* ---------------------------------------------------------------- */}
         <header className="text-center mb-8 print:hidden">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <VisitCounter />
             <ThemeToggle />
           </div>
 
