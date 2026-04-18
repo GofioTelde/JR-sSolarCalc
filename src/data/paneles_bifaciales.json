@@ -23,7 +23,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 43,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 110,
+    "precio_estimado": true
   },
   {
     "id": "bi_500w",
@@ -49,7 +51,9 @@
     "coeficiente_temperatura_isc": 0.04,
     "noct": 42,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 132,
+    "precio_estimado": true
   },
   {
     "id": "bi_550w",
@@ -75,7 +79,9 @@
     "coeficiente_temperatura_isc": 0.04,
     "noct": 41,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 143,
+    "precio_estimado": true
   },
   {
     "id": "bi_600w",
@@ -101,7 +107,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 40,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 157,
+    "precio_estimado": true
   },
   {
     "id": "bi_670w",
@@ -127,7 +135,9 @@
     "coeficiente_temperatura_isc": 0.04,
     "noct": 39,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 165,
+    "precio_estimado": true
   },
   {
     "id": "bi_720w",
@@ -153,7 +163,9 @@
     "coeficiente_temperatura_isc": 0.04,
     "noct": 38,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 177,
+    "precio_estimado": true
   },
   {
     "id": "longi_hi_mo_5m_bi_430w",
@@ -179,7 +191,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 42,
     "garantia_potencia": 30,
-    "garantia_producto": 12
+    "garantia_producto": 12,
+    "precio_ud": 106,
+    "precio_estimado": true
   },
   {
     "id": "jinko_tiger_pro_bi_585w",
@@ -205,7 +219,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 41,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 151,
+    "precio_estimado": true
   },
   {
     "id": "trina_vertex_de_bi_700w",
@@ -231,7 +247,9 @@
     "coeficiente_temperatura_isc": 0.04,
     "noct": 39,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 185,
+    "precio_estimado": true
   },
   {
     "id": "canadian_solar_hiku_bi_460w",
@@ -257,7 +275,9 @@
     "coeficiente_temperatura_isc": 0.06,
     "noct": 42,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 113,
+    "precio_estimado": true
   },
   {
     "id": "ja_solar_deepblue_bi_635w",
@@ -283,7 +303,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 40,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 157,
+    "precio_estimado": true
   },
   {
     "id": "risen_tiger_pro_bi_620w",
@@ -309,7 +331,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 41,
     "garantia_potencia": 30,
-    "garantia_producto": 12
+    "garantia_producto": 12,
+    "precio_ud": 152,
+    "precio_estimado": true
   },
   {
     "id": "sunpower_maxeon_bi_480w",
@@ -335,7 +359,9 @@
     "coeficiente_temperatura_isc": 0.03,
     "noct": 39,
     "garantia_potencia": 30,
-    "garantia_producto": 25
+    "garantia_producto": 25,
+    "precio_ud": 119,
+    "precio_estimado": true
   },
   {
     "id": "lg_neon_bi_410w",
@@ -361,7 +387,9 @@
     "coeficiente_temperatura_isc": 0.04,
     "noct": 40,
     "garantia_potencia": 30,
-    "garantia_producto": 25
+    "garantia_producto": 25,
+    "precio_ud": 101,
+    "precio_estimado": true
   },
   {
     "id": "q_cells_q_peak_duo_bi_660w",
@@ -387,7 +415,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 40,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 162,
+    "precio_estimado": true
   },
   {
     "id": "rec_twinpeak_bi_390w",
@@ -413,7 +443,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 42,
     "garantia_potencia": 30,
-    "garantia_producto": 20
+    "garantia_producto": 20,
+    "precio_ud": 96,
+    "precio_estimado": true
   },
   {
     "id": "solaredge_optimized_bi_340w",
@@ -426,7 +458,7 @@
     "imp": 9.5,
     "voc": 43.9,
     "isc": 10.08,
-    "eficiencia": 20.0,
+    "eficiencia": 20,
     "ancho_mm": 1680,
     "alto_mm": 1000,
     "espesor_mm": 35,
@@ -439,7 +471,9 @@
     "coeficiente_temperatura_isc": 0.06,
     "noct": 44,
     "garantia_potencia": 30,
-    "garantia_producto": 12
+    "garantia_producto": 12,
+    "precio_ud": 84,
+    "precio_estimado": true
   },
   {
     "id": "seraphim_s5_bi_420w",
@@ -465,7 +499,9 @@
     "coeficiente_temperatura_isc": 0.06,
     "noct": 43,
     "garantia_potencia": 30,
-    "garantia_producto": 12
+    "garantia_producto": 12,
+    "precio_ud": 114,
+    "precio_estimado": true
   },
   {
     "id": "axitec_bi_445w",
@@ -478,7 +514,7 @@
     "imp": 11.38,
     "voc": 47.8,
     "isc": 12.05,
-    "eficiencia": 21.0,
+    "eficiencia": 21,
     "ancho_mm": 2019,
     "alto_mm": 1000,
     "espesor_mm": 35,
@@ -491,7 +527,9 @@
     "coeficiente_temperatura_isc": 0.05,
     "noct": 42,
     "garantia_potencia": 30,
-    "garantia_producto": 15
+    "garantia_producto": 15,
+    "precio_ud": 110,
+    "precio_estimado": true
   },
   {
     "id": "vikram_eldora_bi_525w",
@@ -500,7 +538,7 @@
     "potencia_pmax": 525,
     "potencia_posterior": 105,
     "factor_bifacial": 0.75,
-    "vmp": 41.0,
+    "vmp": 41,
     "imp": 12.8,
     "voc": 49.3,
     "isc": 13.57,
@@ -517,6 +555,8 @@
     "coeficiente_temperatura_isc": 0.06,
     "noct": 43,
     "garantia_potencia": 30,
-    "garantia_producto": 12
+    "garantia_producto": 12,
+    "precio_ud": 130,
+    "precio_estimado": true
   }
 ]

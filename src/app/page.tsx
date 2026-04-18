@@ -4,195 +4,376 @@ import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import MagneticCalculatorComponent from "@/components/magnetic/MagneticCalculator";
 import Phase2Wizard from "@/components/Phase2Wizard";
-import { storageService } from "@/services/storageService";
+import Phase3Dimensioning from "@/components/Phase3Dimensioning";
+import Phase4ComponentSelection from "@/components/Phase4ComponentSelection";
+import Phase5Summary from "@/components/Phase5Summary";
+import { ProjectProvider, useProject } from "@/context/ProjectContext";
 
-export default function HomePage() {
-  const [currentPhase, setCurrentPhase] = useState<number>(1);
-  const [hasLocationData, setHasLocationData] = useState<boolean>(false);
+// ---------------------------------------------------------------------------
+// Constants (inline to keep page.tsx self-contained)
+// ---------------------------------------------------------------------------
 
-  // Verificar si hay datos de localización guardados
+const PHASES = [
+  {
+    id: 1,
+    icon: "🧭",
+    short: "Localización",
+    full: "Cálculo de Declinación Magnética",
+    color: "yellow",
+  },
+  {
+    id: 2,
+    icon: "⚙️",
+    short: "Instalación",
+    full: "Tipo y consumo",
+    color: "blue",
+  },
+  {
+    id: 3,
+    icon: "📐",
+    short: "Dimensionado",
+    full: "Análisis y Recomendación",
+    color: "purple",
+  },
+  {
+    id: 4,
+    icon: "🛒",
+    short: "Componentes",
+    full: "Selección de Componentes",
+    color: "indigo",
+  },
+  {
+    id: 5,
+    icon: "✅",
+    short: "Resumen",
+    full: "Lista de compra",
+    color: "emerald",
+  },
+] as const;
+
+type PhaseColor = "yellow" | "blue" | "purple" | "indigo" | "emerald";
+type PhaseId = (typeof PHASES)[number]["id"];
+
+const COLOR_MAP: Record<
+  PhaseColor,
+  {
+    active: string;
+    done: string;
+    ring: string;
+    text: string;
+    sub: string;
+    btn: string;
+  }
+> = {
+  yellow: {
+    active:
+      "bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg",
+    done: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+    ring: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800",
+    text: "text-yellow-700 dark:text-yellow-400",
+    sub: "text-yellow-600 dark:text-yellow-300",
+    btn: "from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700",
+  },
+  blue: {
+    active: "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg",
+    done: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+    ring: "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800",
+    text: "text-blue-700 dark:text-blue-400",
+    sub: "text-blue-600 dark:text-blue-300",
+    btn: "from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700",
+  },
+  purple: {
+    active: "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg",
+    done: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+    ring: "bg-purple-50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800",
+    text: "text-purple-700 dark:text-purple-400",
+    sub: "text-purple-600 dark:text-purple-300",
+    btn: "from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700",
+  },
+  indigo: {
+    active:
+      "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg",
+    done: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+    ring: "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800",
+    text: "text-indigo-700 dark:text-indigo-400",
+    sub: "text-indigo-600 dark:text-indigo-300",
+    btn: "from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700",
+  },
+  emerald: {
+    active:
+      "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg",
+    done: "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400",
+    ring: "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800",
+    text: "text-emerald-700 dark:text-emerald-400",
+    sub: "text-emerald-600 dark:text-emerald-300",
+    btn: "from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700",
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Inner app (needs ProjectContext)
+// ---------------------------------------------------------------------------
+
+function AppContent() {
+  const { data, reset } = useProject();
+
+  const [currentPhase, setCurrentPhase] = useState<PhaseId>(1);
+  const [maxPhase, setMaxPhase] = useState<PhaseId>(1);
+  const [confirmedSystemType, setConfirmedSystemType] = useState<
+    "hibrido" | "separados"
+  >("hibrido");
+
+  // Restore progress from persisted context data
   useEffect(() => {
-    const projectData = storageService.getProjectData();
-    if (projectData.location?.latitude && projectData.location?.longitude) {
-      setHasLocationData(true);
+    if (data.selectedComponents?.panelId) {
+      setMaxPhase(5);
+      setCurrentPhase(5);
+    } else if (data.solarCalc) {
+      setMaxPhase(4);
+      if (data.solarCalc.confirmedSystemType) {
+        setConfirmedSystemType(data.solarCalc.confirmedSystemType);
+      }
+    } else if (data.consumption?.monthlyKWh) {
+      setMaxPhase(3);
+    } else if (data.location?.latitude) {
+      setMaxPhase(2);
     }
+    // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Navegación de fases
-  const handleNextPhase = () => {
-    if (currentPhase === 1) {
-      const projectData = storageService.getProjectData();
-      if (!projectData.location?.latitude || !projectData.location?.longitude) {
-        alert(
-          "⚠️ Por favor, completa los datos de localización en la Fase 1 antes de continuar."
-        );
-        return;
-      }
+  const currentPhaseInfo = PHASES.find((p) => p.id === currentPhase)!;
+  const colors = COLOR_MAP[currentPhaseInfo.color as PhaseColor];
+
+  const goTo = (phase: PhaseId) => {
+    if (phase <= maxPhase) setCurrentPhase(phase);
+  };
+
+  const advance = (to: PhaseId) => {
+    setMaxPhase((m) => (to > m ? to : m) as PhaseId);
+    setCurrentPhase(to);
+  };
+
+  const handlePhase1Done = () => {
+    if (!data.location?.latitude || !data.location?.longitude) {
+      alert(
+        "⚠️ Por favor, completa los datos de localización antes de continuar.",
+      );
+      return;
     }
-    setCurrentPhase(currentPhase + 1);
+    advance(2);
   };
 
-  const handlePreviousPhase = () => {
-    setCurrentPhase(currentPhase - 1);
+  const handlePhase2Done = () => advance(3);
+
+  const handlePhase3Done = (sysType: "hibrido" | "separados") => {
+    setConfirmedSystemType(sysType);
+    advance(4);
   };
 
+  const handlePhase4Done = () => advance(5);
+
+  const handleReset = () => {
+    reset();
+    setCurrentPhase(1);
+    setMaxPhase(1);
+    setConfirmedSystemType("hibrido");
+  };
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300 print:bg-white">
+      <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
+        {/* ---------------------------------------------------------------- */}
         {/* Header */}
-        <header className="text-center mb-10">
-          <div className="flex justify-between items-center mb-6">
-            <div />
+        {/* ---------------------------------------------------------------- */}
+        <header className="text-center mb-8 print:hidden">
+          <div className="flex justify-end mb-4">
             <ThemeToggle />
           </div>
 
-          <div className="inline-block p-4 bg-gradient-to-r from-orange-500 to-yellow-500 dark:from-orange-600 dark:to-yellow-600 rounded-2xl mb-4 shadow-lg">
-            <h1 className="text-4xl font-bold text-white drop-shadow-lg">
-              🌞 SolarCalc
+          <div className="inline-block p-3 bg-gradient-to-r from-orange-500 to-yellow-500 dark:from-orange-600 dark:to-yellow-600 rounded-2xl mb-3 shadow-lg">
+            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow">
+              🌞 JR's SolarCalc
             </h1>
           </div>
 
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-            Dimensionado de Instalaciones Fotovoltaicas
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Instalaciones Fotovoltaicas
           </h2>
 
-          {/* Indicador de fase actual */}
+          {/* Current phase badge */}
           <div
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 ${
-              currentPhase === 1
-                ? "bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800"
-                : "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
-            }`}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4 border ${colors.ring}`}
           >
-            <span
-              className={`font-medium ${
-                currentPhase === 1
-                  ? "text-yellow-700 dark:text-yellow-400"
-                  : "text-blue-700 dark:text-blue-400"
-              }`}
-            >
-              🏗️ Fase {currentPhase}
+            <span className={`font-medium text-sm ${colors.text}`}>
+              {currentPhaseInfo.icon} Fase {currentPhase}
             </span>
-            <span
-              className={`${
-                currentPhase === 1
-                  ? "text-yellow-600 dark:text-yellow-300"
-                  : "text-blue-600 dark:text-blue-300"
-              }`}
-            >
-              {currentPhase === 1
-                ? "Cálculo de Declinación Magnética"
-                : "Configuración del Sistema"}
+            <span className={`text-sm ${colors.sub}`}>
+              {currentPhaseInfo.full}
             </span>
           </div>
 
-          {/* Navegación de fases */}
-          <div className="flex justify-center gap-2 mb-6">
-            {[1, 2, 3, 4, 5].map((phase) => (
-              <button
-                key={phase}
-                onClick={() => {
-                  if (phase === 2 && !hasLocationData && phase > currentPhase) {
-                    alert("⚠️ Completa la Fase 1 primero");
-                    return;
-                  }
-                  setCurrentPhase(phase);
-                }}
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                  currentPhase === phase
-                    ? "bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg scale-110"
-                    : phase < currentPhase
-                    ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                } ${
-                  phase <= currentPhase || hasLocationData
-                    ? "cursor-pointer hover:scale-105"
-                    : "cursor-not-allowed opacity-50"
-                }`}
-                disabled={phase > currentPhase && !hasLocationData && phase > 1}
-              >
-                {phase}
-              </button>
-            ))}
+          {/* Phase navigator + labels */}
+          <div className="hidden sm:flex justify-center gap-1.5 mb-4">
+            {PHASES.map((phase) => {
+              const isDone = phase.id < currentPhase;
+              const isActive = phase.id === currentPhase;
+              const isLocked = phase.id > maxPhase;
+              const pc = COLOR_MAP[phase.color as PhaseColor];
+              return (
+                <div
+                  key={phase.id}
+                  className="flex flex-col items-center gap-1 w-16"
+                >
+                  <button
+                    onClick={() => goTo(phase.id as PhaseId)}
+                    disabled={isLocked}
+                    title={phase.full}
+                    className={[
+                      "w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all",
+                      isActive
+                        ? `${pc.active} scale-110`
+                        : isDone
+                          ? pc.done
+                          : isLocked
+                            ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-pointer hover:scale-105",
+                    ].join(" ")}
+                  >
+                    {isDone ? "✓" : phase.id}
+                  </button>
+                  <span
+                    className={`text-[10px] text-center leading-tight ${isActive ? pc.text + " font-semibold" : "text-gray-400 dark:text-gray-500"}`}
+                  >
+                    {phase.short}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
-          <p className="text-gray-600 dark:text-gray-300 mt-4 max-w-2xl mx-auto">
-            {currentPhase === 1
-              ? "Aplicación profesional para el cálculo preciso de orientación e inclinación de paneles solares"
-              : "Configura los parámetros de consumo y tipo de instalación para tu sistema fotovoltaico"}
-          </p>
+          {/* Phase navigator — mobile only (no labels) */}
+          <div className="flex sm:hidden justify-center items-center gap-1.5 mb-4">
+            {PHASES.map((phase) => {
+              const isDone = phase.id < currentPhase;
+              const isActive = phase.id === currentPhase;
+              const isLocked = phase.id > maxPhase;
+              const pc = COLOR_MAP[phase.color as PhaseColor];
+              return (
+                <button
+                  key={phase.id}
+                  onClick={() => goTo(phase.id as PhaseId)}
+                  disabled={isLocked}
+                  title={phase.full}
+                  className={[
+                    "w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all",
+                    isActive
+                      ? `${pc.active} scale-110`
+                      : isDone
+                        ? pc.done
+                        : isLocked
+                          ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-pointer hover:scale-105",
+                  ].join(" ")}
+                >
+                  {isDone ? "✓" : phase.id}
+                </button>
+              );
+            })}
+          </div>
         </header>
 
-        {/* Main Content */}
-        <main className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-          <div className="p-1 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 dark:from-orange-600 dark:via-yellow-600 dark:to-orange-600 rounded-t-2xl" />
-          <div className="p-6 md:p-8">
+        {/* ---------------------------------------------------------------- */}
+        {/* Main content card */}
+        {/* ---------------------------------------------------------------- */}
+        <main className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 transition-colors duration-300 print:shadow-none print:border-0 overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 print:hidden" />
+          <div className="p-5 md:p-8">
+            {/* FASE 1 */}
             {currentPhase === 1 && (
               <div>
                 <MagneticCalculatorComponent />
-                <div className="text-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 print:hidden">
                   <button
-                    onClick={handleNextPhase}
-                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2"
+                    onClick={handlePhase1Done}
+                    className={`px-8 py-3 bg-gradient-to-r ${colors.btn} text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2`}
                   >
-                    <span>Continuar a Fase 2</span>
-                    <span>→</span>
+                    Continuar <span>→</span>
                   </button>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-                    * Los datos de localización se guardarán automáticamente
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    Los datos de localización se guardan automáticamente
                   </p>
                 </div>
               </div>
             )}
 
+            {/* FASE 2 */}
             {currentPhase === 2 && (
               <div>
                 <Phase2Wizard />
-                {/* BOTONES FUNCIONALES RESTAURADOS */}
-                <div className="flex justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 print:hidden">
                   <button
-                    onClick={handlePreviousPhase}
-                    className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium inline-flex items-center gap-2"
+                    onClick={() => setCurrentPhase(1)}
+                    className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium inline-flex items-center gap-1.5 text-sm"
                   >
-                    <span>←</span>
-                    <span>Volver a Fase 1</span>
+                    ← Atrás
                   </button>
-
                   <button
-                    onClick={handleNextPhase}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2"
+                    onClick={handlePhase2Done}
+                    className={`px-6 py-2.5 bg-gradient-to-r ${colors.btn} text-white rounded-xl font-bold shadow hover:shadow-lg transition-all inline-flex items-center gap-2`}
                   >
-                    <span>Continuar a Fase 3</span>
-                    <span>→</span>
+                    Analizar y Dimensionar →
                   </button>
                 </div>
               </div>
             )}
 
-            {currentPhase > 2 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🚧</div>
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-                  Fase {currentPhase} en desarrollo
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Esta fase está actualmente en desarrollo. Pronto estarán
-                  disponibles los cálculos solares avanzados.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <button
-                    onClick={() => setCurrentPhase(1)}
-                    className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors inline-flex items-center gap-2"
-                  >
-                    <span>←</span>
-                    <span>Volver a Fase 1</span>
-                  </button>
+            {/* FASE 3 */}
+            {currentPhase === 3 && (
+              <div>
+                <Phase3Dimensioning onConfirm={handlePhase3Done} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 print:hidden">
                   <button
                     onClick={() => setCurrentPhase(2)}
-                    className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors inline-flex items-center gap-2"
+                    className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium inline-flex items-center gap-1.5 text-sm"
                   >
-                    <span>←</span>
-                    <span>Volver a Fase 2</span>
+                    ← Atrás
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* FASE 4 */}
+            {currentPhase === 4 && (
+              <div>
+                <Phase4ComponentSelection
+                  confirmedSystemType={confirmedSystemType}
+                  onConfirm={handlePhase4Done}
+                />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 print:hidden">
+                  <button
+                    onClick={() => setCurrentPhase(3)}
+                    className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium inline-flex items-center gap-1.5 text-sm"
+                  >
+                    ← Atrás
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* FASE 5 */}
+            {currentPhase === 5 && (
+              <div>
+                <Phase5Summary onReset={handleReset} />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 print:hidden">
+                  <button
+                    onClick={() => setCurrentPhase(4)}
+                    className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium inline-flex items-center gap-1.5 text-sm"
+                  >
+                    ← Atrás
                   </button>
                 </div>
               </div>
@@ -200,26 +381,30 @@ export default function HomePage() {
           </div>
         </main>
 
+        {/* ---------------------------------------------------------------- */}
         {/* Footer */}
-        <footer className="mt-12 text-center">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <strong>Progreso:</strong> {currentPhase}/5 fases completadas
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <strong>Datos guardados:</strong>{" "}
-              {hasLocationData ? "✓ Localización" : "✗ Localización"}
-            </div>
-          </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            ⚡ SolarCalc v1.0 | Proyecto para dimensionado de instalaciones
-            solares fotovoltaicas
+        {/* ---------------------------------------------------------------- */}
+        <footer className="mt-8 text-center print:hidden">
+          <p className="text-gray-500 dark:text-gray-400 text-xs">
+            ⚡ JR's SolarCalc v1.0 · Dimensionado profesional de instalaciones solares
           </p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">
+          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
             &copy; JR 2026. Todos los derechos reservados.
           </p>
         </footer>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Default export — wraps everything in ProjectProvider
+// ---------------------------------------------------------------------------
+
+export default function HomePage() {
+  return (
+    <ProjectProvider>
+      <AppContent />
+    </ProjectProvider>
   );
 }

@@ -74,3 +74,64 @@ body {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
   }
 }
+
+/* =========================================================================
+   Print styles
+   ========================================================================= */
+
+@media print {
+  /* Hide UI chrome */
+  header, footer, nav,
+  button:not(.print-show),
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Reset backgrounds */
+  html, body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  /* Remove shadows and max-widths */
+  .shadow, .shadow-md, .shadow-lg, .shadow-xl {
+    box-shadow: none !important;
+  }
+
+  /* Full width on paper */
+  .max-w-lg, .max-w-2xl, .max-w-4xl, .max-w-5xl, .max-w-6xl {
+    max-width: 100% !important;
+  }
+
+  /* Padding adjustments */
+  .p-6, .p-8 { padding: 8px !important; }
+  .px-4, .px-6 { padding-left: 4px !important; padding-right: 4px !important; }
+
+  /* Borders remain visible */
+  .border { border-color: #d1d5db !important; }
+
+  /* Backgrounds stay subtle */
+  [class*="bg-orange-50"]  { background-color: #fff7ed !important; }
+  [class*="bg-green-50"]   { background-color: #f0fdf4 !important; }
+  [class*="bg-blue-50"]    { background-color: #eff6ff !important; }
+  [class*="bg-purple-50"]  { background-color: #faf5ff !important; }
+  [class*="bg-emerald-50"] { background-color: #ecfdf5 !important; }
+  [class*="bg-gray-50"]    { background-color: #f9fafb !important; }
+
+  /* Text stays readable */
+  [class*="text-gray-800"], [class*="dark:text-white"] {
+    color: #1f2937 !important;
+  }
+  [class*="text-gray-500"], [class*="text-gray-400"] {
+    color: #6b7280 !important;
+  }
+
+  /* Page breaks */
+  .print\:break-inside-avoid { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+
+  /* Show the print-only header */
+  .print\:block { display: block !important; }
+  .print\:hidden { display: none !important; }
+}

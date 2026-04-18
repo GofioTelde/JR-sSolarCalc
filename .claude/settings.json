@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next *)",
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(f'{p[\\\\\"id\\\\\"]}: {p[\\\\\"potencia_pmax\\\\\"]}Wp | {p[\\\\\"ancho_mm\\\\\"]}x{p[\\\\\"alto_mm\\\\\"]}mm | {p[\\\\\"superficie_m2\\\\\"]}m2'\\) for p in data]\")"
+    ]
+  }
+}

@@ -1,831 +1,404 @@
 "use client";
 
-import { storageService } from "@/services/storageService";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { MagneticCalculator } from "@/services/magneticCalculator";
 import { Coordinates } from "@/types/magnetic.types";
+import { searchCity, type GeocodingResult } from "@/services/geocodingService";
+import { useProject } from "@/context/ProjectContext";
 import Compass from "./Compass";
 
+// ---------------------------------------------------------------------------
+// Quick-access example cities
+// ---------------------------------------------------------------------------
+
+const EXAMPLE_CITIES = [
+  { name: "Las Palmas", lat: 28.1461, lon: -15.4216, alt: 8 },
+  { name: "Madrid",     lat: 40.4168, lon: -3.7038,  alt: 650 },
+  { name: "Barcelona",  lat: 41.3851, lon: 2.1734,   alt: 12 },
+  { name: "Sevilla",    lat: 37.3891, lon: -5.9845,  alt: 7 },
+  { name: "Valencia",   lat: 39.4699, lon: -0.3763,  alt: 15 },
+  { name: "Bilbao",     lat: 43.2630, lon: -2.9350,  alt: 19 },
+  { name: "Málaga",     lat: 36.7213, lon: -4.4214,  alt: 11 },
+  { name: "Zaragoza",   lat: 41.6488, lon: -0.8891,  alt: 200 },
+];
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 const MagneticCalculatorComponent: React.FC = () => {
+  const { data, update, reset } = useProject();
+
+  // ---- state ----
   const [coordinates, setCoordinates] = useState<Coordinates>({
-    latitude: 28.1461,
-    longitude: -15.4216,
-    altitude: 0,
+    latitude: 0, longitude: 0, altitude: 0,
   });
+  const [locationName, setLocationName] = useState("");
+  const [result, setResult]             = useState<any>(null);
+  const [modelInfo, setModelInfo]       = useState<any>(null);
 
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [locationName, setLocationName] = useState("Las Palmas");
-  const [modelInfo, setModelInfo] = useState<any>(null);
-  const [alert, setAlert] = useState<{ message: string; show: boolean }>({
-    message: "",
-    show: false,
-  });
+  // Search
+  const [query, setQuery]               = useState("");
+  const [suggestions, setSuggestions]   = useState<GeocodingResult[]>([]);
+  const [searching, setSearching]       = useState(false);
+  const [searchError, setSearchError]   = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef                     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchBoxRef                    = useRef<HTMLDivElement>(null);
 
-  // Guardar datos automáticamente
-  const saveLocationData = useCallback(
-    (magneticResult: any) => {
-      if (magneticResult) {
-        storageService.saveProjectData({
-          location: {
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-            altitude: coordinates.altitude || 0,
-            locationName: locationName,
-            magneticDeclination: magneticResult.declination,
-            magneticSouth: magneticResult.magneticSouth,
-            declinationDirection: magneticResult.declinationDirection,
-            geographicSouth: magneticResult.geographicSouth,
-          },
-        });
-      }
-    },
-    [coordinates, locationName]
-  );
+  // Alert
+  const [alert, setAlert]               = useState<{ message: string; show: boolean }>({ message: "", show: false });
 
-  const handleCalculate = useCallback(() => {
-    setLoading(true);
+  // ---- helpers ----
+  const showAlert = (message: string) => {
+    setAlert({ message, show: true });
+    setTimeout(() => setAlert({ message: "", show: false }), 3000);
+  };
 
-    requestAnimationFrame(() => {
-      const magneticResult =
-        MagneticCalculator.calculateDeclination(coordinates);
-      setResult(magneticResult);
-      setLoading(false);
-
-      // ✅ GUARDAR DATOS CON TODAS LAS PROPIEDADES
-      saveLocationData(magneticResult);
-    });
-  }, [coordinates, saveLocationData]);
-
-  const handleCoordinateChange = useCallback(
-    (field: keyof Coordinates, value: string) => {
-      // Rechazar comas - no permitir separador de decimales con coma
-      if (value.includes(",")) {
-        setAlert({
-          message:
-            "Por favor usa punto (.) como separador decimal, no coma (,)",
-          show: true,
-        });
-        setTimeout(() => setAlert({ message: "", show: false }), 3000);
-        return;
-      }
-
-      // Permitir borrar completamente (vacío)
-      if (value === "") {
-        const newCoordinates = {
-          ...coordinates,
-          [field]: 0,
-        };
-        setCoordinates(newCoordinates);
-        return;
-      }
-
-      const numValue = parseFloat(value);
-
-      // Si es un número válido, actualizar el estado
-      if (!isNaN(numValue)) {
-        const newCoordinates = {
-          ...coordinates,
-          [field]: numValue,
-        };
-        setCoordinates(newCoordinates);
-
-        // ✅ GUARDAR INMEDIATAMENTE AL CAMBIAR COORDENADAS
-        if (result) {
-          const magneticResult =
-            MagneticCalculator.calculateDeclination(newCoordinates);
-          setResult(magneticResult);
-          saveLocationData(magneticResult);
-        }
-      }
-      // No hacer nada más - dejar que el input se actualice visualmente sin validar
-    },
-    [coordinates, result, saveLocationData]
-  );
-
-  // Ejemplos predefinidos con datos reales
-  const exampleLocations = [
-    {
-      name: "Las Palmas",
-      lat: 28.1461,
-      lon: -15.4216,
-      alt: 8,
-      expectedDecl: -3.33,
-    },
-    {
-      name: "Madrid",
-      lat: 40.4168,
-      lon: -3.7038,
-      alt: 650,
-      expectedDecl: -1.2,
-    },
-    {
-      name: "Barcelona",
-      lat: 41.3851,
-      lon: 2.1734,
-      alt: 12,
-      expectedDecl: 0.8,
-    },
-    { name: "Sevilla", lat: 37.3891, lon: -5.9845, alt: 7, expectedDecl: -1.8 },
-    {
-      name: "Valencia",
-      lat: 39.4699,
-      lon: -0.3763,
-      alt: 15,
-      expectedDecl: 0.2,
-    },
-    {
-      name: "Nueva York",
-      lat: 40.7128,
-      lon: -74.006,
-      alt: 10,
-      expectedDecl: -12.5,
-    },
-    { name: "Tokyo", lat: 35.6762, lon: 139.6503, alt: 40, expectedDecl: 7.0 },
-    {
-      name: "Sydney",
-      lat: -33.8688,
-      lon: 151.2093,
-      alt: 35,
-      expectedDecl: 12.4,
-    },
-    { name: "Londres", lat: 51.5074, lon: -0.1278, alt: 35, expectedDecl: 0.5 },
-    { name: "Ecuador", lat: 0, lon: -78.4678, alt: 2850, expectedDecl: 0.1 },
-  ];
-
-  const loadExample = useCallback((location: (typeof exampleLocations)[0]) => {
-    const newCoordinates = {
-      latitude: location.lat,
-      longitude: location.lon,
-      altitude: location.alt,
-    };
-
-    setCoordinates(newCoordinates);
-    setLocationName(location.name);
-
-    // ✅ CALCULAR Y GUARDAR DATOS DEL EJEMPLO
-    const magneticResult =
-      MagneticCalculator.calculateDeclination(newCoordinates);
-    setResult(magneticResult);
-
-    storageService.saveProjectData({
-      location: {
-        latitude: location.lat,
-        longitude: location.lon,
-        altitude: location.alt || 0,
-        locationName: location.name,
-        magneticDeclination: magneticResult.declination,
-        magneticSouth: magneticResult.magneticSouth,
-        declinationDirection: magneticResult.declinationDirection,
-        geographicSouth: magneticResult.geographicSouth,
-      },
-    });
-  }, []);
-
-  // Calcular automáticamente al cambiar coordenadas
-  useEffect(() => {
-    handleCalculate();
-  }, [handleCalculate]);
-
-  // Verificar si hay datos guardados al cargar
-  useEffect(() => {
-    const savedData = storageService.getProjectData();
-    if (savedData.location) {
-      setCoordinates({
-        latitude: savedData.location.latitude,
-        longitude: savedData.location.longitude,
-        altitude: savedData.location.altitude || 0,
+  const calcAndSave = useCallback(
+    (coords: Coordinates, name: string) => {
+      const r = MagneticCalculator.calculateDeclination(coords);
+      setResult(r);
+      // Save through context so all other phases see the updated location immediately.
+      // Also clear downstream stale data (solarCalc, selectedComponents) when location changes.
+      update({
+        location: {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          altitude: coords.altitude || 0,
+          locationName: name,
+          magneticDeclination: r.declination,
+          magneticSouth: r.magneticSouth,
+          declinationDirection: r.declinationDirection,
+          geographicSouth: r.geographicSouth,
+        },
+        solarCalc: undefined,
+        selectedComponents: undefined,
       });
-      if (savedData.location.locationName) {
-        setLocationName(savedData.location.locationName);
-      }
-    }
-  }, []);
-
-  // Obtener información del modelo
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const info = MagneticCalculator.getModelInfo();
-      setModelInfo(info);
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Manejar cambio de nombre de ubicación
-  const handleLocationNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newName = e.target.value;
-      setLocationName(newName);
-
-      // ✅ GUARDAR NOMBRE AUTOMÁTICAMENTE
-      const currentData = storageService.getProjectData();
-      if (currentData.location) {
-        storageService.saveProjectData({
-          ...currentData,
-          location: {
-            ...currentData.location,
-            locationName: newName,
-          },
-        });
-      } else {
-        storageService.saveProjectData({
-          location: {
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-            altitude: coordinates.altitude || 0,
-            locationName: newName,
-            magneticDeclination: result?.declination || 0,
-            magneticSouth: result?.magneticSouth || 180,
-            declinationDirection: result?.declinationDirection || "W",
-            geographicSouth: result?.geographicSouth || 180,
-          },
-        });
-      }
+      return r;
     },
-    [coordinates, result]
+    [update]
   );
 
+  // ---- initial load from context (context already hydrated from localStorage) ----
+  useEffect(() => {
+    if (data.location) {
+      const c = { latitude: data.location.latitude, longitude: data.location.longitude, altitude: data.location.altitude || 0 };
+      setCoordinates(c);
+      setLocationName(data.location.locationName || "");
+      setQuery(data.location.locationName || "");
+      const r = MagneticCalculator.calculateDeclination(c);
+      setResult(r);
+    }
+    const info = MagneticCalculator.getModelInfo();
+    setModelInfo(info);
+    // Only run once on mount — data is stable at this point
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ---- close suggestions when clicking outside ----
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // ---- city search (debounced) ----
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setSearchError(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await searchCity(value);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+        if (results.length === 0) setSearchError("No se encontraron resultados. Prueba con otro nombre o escribe las coordenadas manualmente.");
+      } catch (err) {
+        setSearchError((err as Error).message);
+        setSuggestions([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+  };
+
+  const handleSelectCity = useCallback((city: GeocodingResult) => {
+    const coords = { latitude: city.latitude, longitude: city.longitude, altitude: city.elevation };
+    setCoordinates(coords);
+    setLocationName(city.name);
+    setQuery(city.label);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    calcAndSave(coords, city.name);
+  }, [calcAndSave]);
+
+  const handleExampleClick = useCallback((loc: typeof EXAMPLE_CITIES[0]) => {
+    const coords = { latitude: loc.lat, longitude: loc.lon, altitude: loc.alt };
+    setCoordinates(coords);
+    setLocationName(loc.name);
+    setQuery(loc.name);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    calcAndSave(coords, loc.name);
+  }, [calcAndSave]);
+
+  // ---- manual coordinate change ----
+  const handleCoordChange = useCallback((field: keyof Coordinates, value: string) => {
+    if (value.includes(",")) {
+      showAlert("Usa punto (.) como separador decimal, no coma (,)");
+      return;
+    }
+    const num = parseFloat(value);
+    if (isNaN(num) && value !== "" && value !== "-") return;
+    const newCoords = { ...coordinates, [field]: isNaN(num) ? 0 : num };
+    setCoordinates(newCoords);
+    calcAndSave(newCoords, locationName);
+  }, [coordinates, locationName, calcAndSave]);
+
+  // =========================================================================
+  // Render
+  // =========================================================================
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-green-400 dark:from-blue-600 dark:to-green-500 rounded-full mb-4">
-          <span className="text-2xl">🧭</span>
+    <div className="space-y-6">
+
+      {/* Phase badge */}
+      <div className="text-center">
+        <div className="inline-flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-5 py-2 mb-3">
+          <span className="text-yellow-700 dark:text-yellow-400 font-bold">🧭 Fase 1</span>
+          <span className="text-yellow-600 dark:text-yellow-300 font-medium">Localización</span>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Calculadora de Declinación Magnética
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
-          World Magnetic Model (WMM) oficial - Precisión para cualquier punto
-          del planeta
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Busca la ciudad donde se hará la instalación
         </p>
       </div>
 
-      {/* Panel de entrada */}
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800/30">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-            <span className="text-blue-500 dark:text-blue-400">📍</span>{" "}
-            Coordenadas del Punto
-          </h2>
-          {modelInfo && (
-            <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-              <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
-                Modelo: {modelInfo.name} • {modelInfo.validFrom} -{" "}
-                {modelInfo.validTo}
-              </p>
-            </div>
-          )}
+      {/* Reset button — only shown when there is existing project data */}
+      {(data.location || data.consumption || data.solarCalc || data.selectedComponents) && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("¿Borrar todos los datos del proyecto y empezar de nuevo?")) {
+                reset();
+                setCoordinates({ latitude: 0, longitude: 0, altitude: 0 });
+                setLocationName("");
+                setQuery("");
+                setResult(null);
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            🗑 Nueva instalación
+          </button>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <span className="flex items-center gap-1">
-                <span className="text-red-500 dark:text-red-400">⟋</span>{" "}
-                Latitud (°)
-              </span>
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              defaultValue={
-                coordinates.latitude === 0 ? "" : coordinates.latitude
-              }
-              onChange={(e) =>
-                handleCoordinateChange("latitude", e.target.value)
-              }
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
-              placeholder="Ej: 28.1461"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              -90° (Polo Sur) a 90° (Polo Norte)
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <span className="flex items-center gap-1">
-                <span className="text-green-500 dark:text-green-400">⟍</span>{" "}
-                Longitud (°)
-              </span>
-            </label>
-            <input
-              type="text"
-              inputMode="decimal"
-              defaultValue={
-                coordinates.longitude === 0 ? "" : coordinates.longitude
-              }
-              onChange={(e) =>
-                handleCoordinateChange("longitude", e.target.value)
-              }
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
-              placeholder="Ej: -15.4216"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              -180° (Oeste) a 180° (Este)
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <span className="flex items-center gap-1">
-                <span className="text-purple-500 dark:text-purple-400">⛰️</span>{" "}
-                Altitud (m)
-              </span>
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              defaultValue={
-                coordinates.altitude === 0 ? "" : coordinates.altitude
-              }
-              onChange={(e) =>
-                handleCoordinateChange("altitude", e.target.value)
-              }
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
-              placeholder="Ej: 8"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Metros sobre el nivel del mar
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              <span className="flex items-center gap-1">
-                <span className="text-yellow-500 dark:text-yellow-400">🏙️</span>{" "}
-                Nombre
-              </span>
-            </label>
-            <input
-              type="text"
-              value={locationName}
-              onChange={handleLocationNameChange}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
-              placeholder="Nombre de la ubicación"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Para referencia en reportes
-            </p>
+      {/* ------------------------------------------------------------------ */}
+      {/* CITY SEARCH — main input */}
+      {/* ------------------------------------------------------------------ */}
+      <div ref={searchBoxRef} className="relative">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          🔍 Buscar ciudad
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            placeholder="Escribe el nombre de la ciudad…"
+            className="w-full px-4 py-3 pr-10 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-base focus:outline-none focus:border-yellow-500 dark:focus:border-yellow-500 transition-colors"
+            autoComplete="off"
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {searching
+              ? <span className="animate-spin text-yellow-500">⏳</span>
+              : <span className="text-gray-400">🔍</span>
+            }
           </div>
         </div>
 
-        {/* Ejemplos rápidos */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-            <span className="text-blue-500 dark:text-blue-400">🌍</span> Puntos
-            de ejemplo globales:
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {exampleLocations.map((loc) => (
+        {/* Search error */}
+        {searchError && !showSuggestions && (
+          <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">{searchError}</p>
+        )}
+
+        {/* Suggestions dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
+            {suggestions.map((city) => (
               <button
-                key={loc.name}
-                onClick={() => loadExample(loc)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  locationName === loc.name
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white shadow-lg"
-                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-600"
-                }`}
-                title={`Declinación esperada: ${loc.expectedDecl}°`}
+                key={city.id}
+                type="button"
+                onClick={() => handleSelectCity(city)}
+                className="w-full text-left px-4 py-3 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
               >
-                {loc.name}
+                <div className="font-medium text-gray-800 dark:text-white text-sm">{city.name}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-2">
+                  <span>{city.admin1 ? `${city.admin1}, ` : ""}{city.country}</span>
+                  <span className="text-gray-300 dark:text-gray-600">·</span>
+                  <span>{city.latitude.toFixed(2)}°, {city.longitude.toFixed(2)}°</span>
+                  {city.elevation > 0 && <><span className="text-gray-300 dark:text-gray-600">·</span><span>{city.elevation} m</span></>}
+                </div>
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Resultados */}
-      <div className="bg-gradient-to-br from-gray-50 to-green-50 dark:from-gray-800 dark:to-green-900/20 rounded-xl p-6 border border-green-100 dark:border-green-800/30">
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500 dark:border-green-400"></div>
-            <p className="mt-6 text-lg text-gray-700 dark:text-gray-300 font-medium">
-              Calculando declinación magnética...
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Usando World Magnetic Model (WMM) oficial
-            </p>
-          </div>
-        ) : (
-          result && (
-            <>
-              {/* Brújula */}
-              <div className="mb-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                    <span className="text-green-500 dark:text-green-400">
-                      🧭
-                    </span>{" "}
-                    Brújula Magnética
-                  </h2>
-                  <div className="flex flex-col md:flex-row gap-2">
-                    <div className="px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-green-200 dark:border-green-700 shadow-sm">
-                      <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                        Declinación:{" "}
-                        {result.additionalData?.rawDeclination?.toFixed(2)}°
-                        {result.declinationDirection}
-                      </span>
-                    </div>
-                    <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-200 dark:border-blue-700">
-                      <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                        Sur Magnético: {result.magneticSouth.toFixed(1)}°
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <Compass
-                  geographicSouth={result.geographicSouth}
-                  magneticSouth={result.magneticSouth}
-                  declination={result.declination}
-                  declinationDirection={result.declinationDirection}
-                />
-              </div>
-
-              {/* Datos detallados */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-blue-100 dark:border-blue-800/30 shadow-sm">
-                  <h3 className="font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-blue-500 dark:text-blue-400">📊</span>{" "}
-                    Datos Magnéticos Completos
-                  </h3>
-                  <div className="space-y-4">
-                    {result.additionalData && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                              Inclinación
-                            </p>
-                            <p className="text-lg font-bold text-blue-700 dark:text-blue-400">
-                              {result.additionalData.inclination?.toFixed(2) ||
-                                "0.00"}
-                              °
-                            </p>
-                          </div>
-                          <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                              Intensidad Total
-                            </p>
-                            <p className="text-lg font-bold text-green-700 dark:text-green-400">
-                              {result.additionalData.totalIntensity
-                                ? (
-                                    result.additionalData.totalIntensity / 1000
-                                  ).toFixed(1)
-                                : "0.0"}{" "}
-                              µT
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Componentes del Campo
-                          </p>
-                          <div className="grid grid-cols-3 gap-3">
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Norte (X)
-                              </p>
-                              <p className="font-semibold text-purple-700 dark:text-purple-400">
-                                {result.additionalData.northComponent
-                                  ? (
-                                      result.additionalData.northComponent /
-                                      1000
-                                    ).toFixed(1)
-                                  : "0.0"}{" "}
-                                µT
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Este (Y)
-                              </p>
-                              <p className="font-semibold text-pink-700 dark:text-pink-400">
-                                {result.additionalData.eastComponent
-                                  ? (
-                                      result.additionalData.eastComponent / 1000
-                                    ).toFixed(1)
-                                  : "0.0"}{" "}
-                                µT
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Vertical (Z)
-                              </p>
-                              <p className="font-semibold text-indigo-700 dark:text-indigo-400">
-                                {result.additionalData.verticalComponent
-                                  ? (
-                                      result.additionalData.verticalComponent /
-                                      1000
-                                    ).toFixed(1)
-                                  : "0.0"}{" "}
-                                µT
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="p-5 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                            Declinación Magnética
-                          </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            Ángulo entre sur geográfico y magnético
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
-                            {result.declination.toFixed(2)}°
-                          </p>
-                          <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                            Hacia el{" "}
-                            {result.declinationDirection === "E"
-                              ? "Este"
-                              : "Oeste"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-green-100 dark:border-green-800/30 shadow-sm">
-                  <h3 className="font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-green-500 dark:text-green-400">
-                      📍
-                    </span>{" "}
-                    Información Geográfica
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600 dark:text-gray-400 font-medium">
-                          Ubicación
-                        </span>
-                        <span className="px-3 py-1 bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:to-yellow-800/30 rounded-full text-sm font-medium text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-700">
-                          📍 {locationName}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Nombre de referencia para la instalación
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Latitud
-                        </p>
-                        <p className="text-lg font-bold text-blue-700 dark:text-blue-400">
-                          {coordinates.latitude.toFixed(3)}°
-                        </p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <div
-                            className={`w-3 h-3 rounded-full ${
-                              coordinates.latitude >= 0
-                                ? "bg-red-500 dark:bg-red-400"
-                                : "bg-blue-500 dark:bg-blue-400"
-                            }`}
-                          ></div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {coordinates.latitude >= 0
-                              ? "Hemisfério Norte"
-                              : "Hemisfério Sur"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Longitud
-                        </p>
-                        <p className="text-lg font-bold text-green-700 dark:text-green-400">
-                          {coordinates.longitude.toFixed(3)}°
-                        </p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <div
-                            className={`w-3 h-3 rounded-full ${
-                              coordinates.longitude >= 0
-                                ? "bg-orange-500 dark:bg-orange-400"
-                                : "bg-green-500 dark:bg-green-400"
-                            }`}
-                          ></div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {coordinates.longitude >= 0
-                              ? "Este de Greenwich"
-                              : "Oeste de Greenwich"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                            Altitud
-                          </p>
-                          <p className="text-xl font-bold text-purple-700 dark:text-purple-400">
-                            {(coordinates.altitude || 0).toLocaleString(
-                              "es-ES"
-                            )}{" "}
-                            m
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Sobre el nivel del mar
-                          </p>
-                        </div>
-                        <div className="text-3xl text-purple-400 dark:text-purple-500">
-                          ⛰️
-                        </div>
-                      </div>
-                    </div>
-
-                    {modelInfo && (
-                      <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Modelo Utilizado
-                        </p>
-                        <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                          {modelInfo.name}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          Válido: {modelInfo.validFrom} - {modelInfo.validTo}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Información para instalación solar */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
-                <h3 className="font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-yellow-600 dark:text-yellow-400">
-                    ☀️
-                  </span>{" "}
-                  Aplicación para Instalaciones Solares
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 dark:from-yellow-600 dark:to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-white">1</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
-                        Orientación Exacta de Paneles
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                        Para orientar los paneles al{" "}
-                        <strong className="text-orange-600 dark:text-orange-400">
-                          sur geográfico exacto (180°)
-                        </strong>
-                        , ajuste la brújula en{" "}
-                        <strong className="text-orange-600 dark:text-orange-400">
-                          {result.declination.toFixed(2)}°
-                        </strong>{" "}
-                        hacia el
-                        <strong className="text-orange-600 dark:text-orange-400">
-                          {" "}
-                          {result.declinationDirection === "E"
-                            ? "este"
-                            : "oeste"}
-                        </strong>
-                        .
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-teal-500 dark:from-green-600 dark:to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-white">2</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
-                        Configuración de Seguidores Solares
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                        Programe el azimut en{" "}
-                        <strong className="text-green-600 dark:text-green-400">
-                          {result.magneticSouth.toFixed(1)}°
-                        </strong>
-                        para alinear con el sur magnético (equivalente a 180°
-                        geográfico).
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-white">3</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
-                        Verificación y Precisión
-                      </p>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                        Este cálculo usa el{" "}
-                        <strong className="text-blue-600 dark:text-blue-400">
-                          World Magnetic Model oficial
-                        </strong>{" "}
-                        con precisión de ±0.1° a 1°. Para proyectos críticos,
-                        verificar con GPS de alta precisión.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )
         )}
       </div>
 
-      {/* Información del modelo */}
-      {modelInfo && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-800 dark:from-gray-700 dark:to-gray-900 rounded-lg flex items-center justify-center">
-              <span className="text-white">⚙️</span>
-            </div>
+      {/* ------------------------------------------------------------------ */}
+      {/* Result card — shown once a city is selected */}
+      {/* ------------------------------------------------------------------ */}
+      {result && locationName && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h3 className="font-semibold text-gray-800 dark:text-white">
-                Información del Modelo Geomagnético
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                World Magnetic Model (WMM) - Modelo oficial
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600">
-              <h4 className="font-medium text-gray-800 dark:text-white mb-2">
-                Especificaciones
-              </h4>
-              <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                <li>• Modelo: {modelInfo.name}</li>
-                <li>• Época: {modelInfo.epoch}</li>
-                <li>
-                  • Válido: {modelInfo.validFrom} - {modelInfo.validTo}
-                </li>
-                <li>• Precisión: {modelInfo.accuracy}</li>
-              </ul>
-            </div>
-
-            <div className="p-4 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600">
-              <h4 className="font-medium text-gray-800 dark:text-white mb-2">
-                Fuente y Validación
-              </h4>
-              <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                <li>• Fuente: {modelInfo.source}</li>
-                <li>• Usado por: NOAA, NASA, DOD</li>
-                <li>• Actualización: Cada 5 años</li>
-                <li>• Cobertura: Global completa</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
-            <div className="flex items-start gap-3">
-              <div className="text-green-600 dark:text-green-400">✅</div>
-              <div>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Este modelo es el{" "}
-                  <strong className="text-green-700 dark:text-green-400">
-                    estándar internacional
-                  </strong>{" "}
-                  usado en navegación aérea y marítima, cartografía, y
-                  aplicaciones científicas. Proporciona datos magnéticos
-                  precisos para cualquier punto de la Tierra.
-                </p>
+              <div className="font-bold text-gray-800 dark:text-white text-lg flex items-center gap-2">
+                📍 {locationName}
               </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5">
+                <span>Lat: <strong className="text-gray-700 dark:text-gray-300">{coordinates.latitude.toFixed(4)}°</strong></span>
+                <span>Lon: <strong className="text-gray-700 dark:text-gray-300">{coordinates.longitude.toFixed(4)}°</strong></span>
+                <span>Alt: <strong className="text-gray-700 dark:text-gray-300">{coordinates.altitude} m</strong></span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-bold text-yellow-700 dark:text-yellow-400">
+                {result.declination.toFixed(2)}°
+                <span className="text-sm font-normal ml-1">{result.declinationDirection === "E" ? "Este" : "Oeste"}</span>
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Declinación magnética</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Alerta personalizada */}
-      {alert.show && (
-        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top">
-          <div className="bg-black dark:bg-black border border-red-500 dark:border-red-600 rounded-lg p-4 shadow-lg flex items-center gap-3">
-            <div className="text-red-500 dark:text-red-400 text-xl">⚠️</div>
-            <p className="text-red-600 dark:text-red-500 font-bold text-sm">
-              {alert.message}
-            </p>
+      {/* ------------------------------------------------------------------ */}
+      {/* Quick-access examples */}
+      {/* ------------------------------------------------------------------ */}
+      <div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Ciudades frecuentes:</p>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLE_CITIES.map((loc) => (
             <button
-              onClick={() => setAlert({ message: "", show: false })}
-              className="ml-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+              key={loc.name}
+              onClick={() => handleExampleClick(loc)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                locationName === loc.name
+                  ? "bg-yellow-500 text-white shadow"
+                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-yellow-400 dark:hover:border-yellow-600"
+              }`}
             >
-              ✕
+              {loc.name}
             </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Manual coords (always visible) */}
+      {/* ------------------------------------------------------------------ */}
+      <div>
+        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Coordenadas</p>
+        <div className="grid grid-cols-3 gap-3">
+          {(["latitude", "longitude", "altitude"] as (keyof Coordinates)[]).map((field) => (
+            <div key={field}>
+              <label className="block text-xs text-gray-500 dark:text-gray-500 mb-1">
+                {{ latitude: "Latitud (°)", longitude: "Longitud (°)", altitude: "Altitud (m)" }[field]}
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={coordinates[field] === 0 && field !== "altitude" ? "" : String(coordinates[field])}
+                onChange={(e) => handleCoordChange(field, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-sm focus:outline-none focus:border-yellow-500 dark:focus:border-yellow-500"
+                placeholder={{ latitude: "28.1461", longitude: "-15.4216", altitude: "0" }[field]}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Compass + results */}
+      {/* ------------------------------------------------------------------ */}
+      {result && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <Compass
+            geographicSouth={result.geographicSouth}
+            magneticSouth={result.magneticSouth}
+            declination={result.declination}
+            declinationDirection={result.declinationDirection}
+          />
+
+          {/* Key data */}
+          <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Declinación magnética</div>
+              <div className="text-xl font-bold text-yellow-700 dark:text-yellow-400">
+                {result.declination.toFixed(2)}°
+                <span className="text-xs font-normal ml-1 text-gray-600 dark:text-gray-400">
+                  hacia el {result.declinationDirection === "E" ? "Este" : "Oeste"}
+                </span>
+              </div>
+            </div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Sur magnético (azimut)</div>
+              <div className="text-xl font-bold text-blue-700 dark:text-blue-400">
+                {result.magneticSouth.toFixed(1)}°
+              </div>
+            </div>
+          </div>
+
+          {/* Solar orientation note */}
+          <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 text-sm text-gray-700 dark:text-gray-300">
+            <strong>☀️ Orientación de paneles:</strong> Apunta tu brújula a{" "}
+            <strong className="text-orange-600 dark:text-orange-400">{result.magneticSouth.toFixed(1)}°</strong>{" "}
+            para mirar al sur geográfico exacto. Corrección de{" "}
+            <strong>{result.declination.toFixed(2)}°</strong> hacia el{" "}
+            {result.declinationDirection === "E" ? "Este" : "Oeste"} aplicada.
+          </div>
+
+          {/* Additional data collapsible */}
+          {result.additionalData && (
+            <details className="mt-3">
+              <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200">
+                Ver datos magnéticos completos
+              </summary>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                {[
+                  { label: "Inclinación", value: `${(result.additionalData.inclination ?? 0).toFixed(2)}°` },
+                  { label: "Intensidad total", value: `${((result.additionalData.totalIntensity ?? 0) / 1000).toFixed(1)} µT` },
+                  { label: "Componente Norte", value: `${((result.additionalData.northComponent ?? 0) / 1000).toFixed(1)} µT` },
+                  { label: "Componente Este", value: `${((result.additionalData.eastComponent ?? 0) / 1000).toFixed(1)} µT` },
+                  { label: "Componente Vertical", value: `${((result.additionalData.verticalComponent ?? 0) / 1000).toFixed(1)} µT` },
+                  { label: "Modelo", value: modelInfo?.name ?? "WMM" },
+                ].map((d) => (
+                  <div key={d.label} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                    <div className="text-gray-400 dark:text-gray-500">{d.label}</div>
+                    <div className="font-semibold text-gray-700 dark:text-gray-300">{d.value}</div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* Alert */}
+      {alert.show && (
+        <div className="fixed top-6 right-6 z-50">
+          <div className="bg-white dark:bg-gray-900 border border-red-400 rounded-xl p-4 shadow-xl flex items-center gap-3">
+            <span className="text-red-500 text-xl">⚠️</span>
+            <p className="text-red-600 dark:text-red-400 font-medium text-sm">{alert.message}</p>
+            <button onClick={() => setAlert({ message: "", show: false })} className="text-gray-400 hover:text-gray-600 ml-2">✕</button>
           </div>
         </div>
       )}

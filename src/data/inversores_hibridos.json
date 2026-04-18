@@ -1,23 +1,26 @@
 [
   {
-    "id": "inv_hib_3kw",
-    "nombre": "Inversor Híbrido 3kW",
+    "id": "inv_hib_3kw_1f",
+    "nombre": "Inversor Híbrido 3kW Monofásico",
     "tipo": "hibrido",
     "potencia_ac_nominal": 3000,
     "potencia_ac_max": 3300,
-    "potencia_pv_max": 4000,
+    "potencia_pv_max": 4500,
     "mppt_numero": 1,
-    "mppt_corriente_max": 11,
-    "mppt_rango_voltaje": [60, 550],
-    "mppt_corriente_cortocircuito_max": 18,
-    "strings_por_mppt": 1,
+    "mppt_corriente_max": 13,
+    "mppt_rango_voltaje": [
+      60,
+      550
+    ],
+    "mppt_corriente_cortocircuito_max": 20,
+    "strings_por_mppt": 2,
     "voltage_dc_nominal": 360,
     "bateria_tension": 48,
-    "bateria_corriente_carga_max": 50,
-    "bateria_corriente_descarga_max": 50,
-    "bateria_compatibilidad": "LiFePO4",
+    "bateria_corriente_carga_max": 60,
+    "bateria_corriente_descarga_max": 60,
+    "bateria_compatibilidad": "LiFePO4 48V",
     "eficiencia_max": 97,
-    "eficiencia_mppt": 99,
+    "eficiencia_mppt": 99.5,
     "forma_onda": "Sinusoidal pura",
     "frecuencia_salida": 50,
     "tension_salida": 230,
@@ -27,31 +30,51 @@
       "Sobrecorriente",
       "Cortocircuito",
       "Sobretemperatura",
-      "Anti-islanding"
+      "Anti-islanding",
+      "Polaridad inversa PV"
     ],
-    "comunicacion": ["RS485", "WiFi"],
-    "dimensiones_mm": [420, 320, 180],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Bluetooth"
+    ],
+    "dimensiones_mm": [
+      420,
+      320,
+      175
+    ],
     "peso_kg": 15,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 5800,
+    "precio_estimado": true
   },
   {
-    "id": "inv_hib_5kw",
-    "nombre": "Inversor Híbrido 5kW",
+    "id": "inv_hib_4kw_1f",
+    "nombre": "Inversor Híbrido 4kW Monofásico",
     "tipo": "hibrido",
-    "potencia_ac_nominal": 5000,
-    "potencia_ac_max": 5500,
-    "potencia_pv_max": 7500,
+    "potencia_ac_nominal": 4000,
+    "potencia_ac_max": 4400,
+    "potencia_pv_max": 6000,
     "mppt_numero": 2,
-    "mppt_corriente_max": 16,
-    "mppt_rango_voltaje": [60, 550],
-    "mppt_corriente_cortocircuito_max": 23,
+    "mppt_corriente_max": 13,
+    "mppt_rango_voltaje": [
+      60,
+      550
+    ],
+    "mppt_corriente_cortocircuito_max": 20,
     "strings_por_mppt": 1,
     "voltage_dc_nominal": 360,
     "bateria_tension": 48,
-    "bateria_corriente_carga_max": 120,
-    "bateria_corriente_descarga_max": 120,
-    "bateria_compatibilidad": "LiFePO4",
+    "bateria_corriente_carga_max": 80,
+    "bateria_corriente_descarga_max": 80,
+    "bateria_compatibilidad": "LiFePO4 48V",
     "eficiencia_max": 97.5,
     "eficiencia_mppt": 99.5,
     "forma_onda": "Sinusoidal pura",
@@ -64,31 +87,107 @@
       "Cortocircuito",
       "Sobretemperatura",
       "Anti-islanding",
-      "Polaridad inversa"
+      "Polaridad inversa PV"
     ],
-    "comunicacion": ["RS485", "WiFi", "Bluetooth"],
-    "dimensiones_mm": [450, 350, 200],
-    "peso_kg": 21,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Bluetooth"
+    ],
+    "dimensiones_mm": [
+      440,
+      340,
+      185
+    ],
+    "peso_kg": 18,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 6800,
+    "precio_estimado": true
   },
   {
-    "id": "inv_hib_6kw",
-    "nombre": "Inversor Híbrido 6kW",
+    "id": "inv_hib_5kw_1f",
+    "nombre": "Inversor Híbrido 5kW Monofásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 5000,
+    "potencia_ac_max": 5500,
+    "potencia_pv_max": 7500,
+    "mppt_numero": 2,
+    "mppt_corriente_max": 16,
+    "mppt_rango_voltaje": [
+      60,
+      550
+    ],
+    "mppt_corriente_cortocircuito_max": 24,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 360,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 100,
+    "bateria_corriente_descarga_max": 100,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 97.8,
+    "eficiencia_mppt": 99.5,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 230,
+    "fases": 1,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Polaridad inversa PV"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Bluetooth",
+      "Ethernet"
+    ],
+    "dimensiones_mm": [
+      460,
+      360,
+      195
+    ],
+    "peso_kg": 22,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 7500,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_6kw_1f",
+    "nombre": "Inversor Híbrido 6kW Monofásico",
     "tipo": "hibrido",
     "potencia_ac_nominal": 6000,
     "potencia_ac_max": 6600,
     "potencia_pv_max": 9000,
     "mppt_numero": 2,
     "mppt_corriente_max": 18,
-    "mppt_rango_voltaje": [60, 550],
+    "mppt_rango_voltaje": [
+      80,
+      600
+    ],
     "mppt_corriente_cortocircuito_max": 27,
-    "strings_por_mppt": 1,
+    "strings_por_mppt": 2,
     "voltage_dc_nominal": 360,
     "bateria_tension": 48,
-    "bateria_corriente_carga_max": 150,
-    "bateria_corriente_descarga_max": 150,
-    "bateria_compatibilidad": "LiFePO4",
+    "bateria_corriente_carga_max": 120,
+    "bateria_corriente_descarga_max": 120,
+    "bateria_compatibilidad": "LiFePO4 48V",
     "eficiencia_max": 98,
     "eficiencia_mppt": 99.7,
     "forma_onda": "Sinusoidal pura",
@@ -101,13 +200,374 @@
       "Cortocircuito",
       "Sobretemperatura",
       "Anti-islanding",
-      "Polaridad inversa"
+      "Polaridad inversa PV"
     ],
-    "comunicacion": ["RS485", "WiFi", "Bluetooth", "Ethernet"],
-    "dimensiones_mm": [500, 400, 220],
-    "peso_kg": 28,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Bluetooth",
+      "Ethernet"
+    ],
+    "dimensiones_mm": [
+      490,
+      380,
+      205
+    ],
+    "peso_kg": 26,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 8500,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_8kw_1f",
+    "nombre": "Inversor Híbrido 8kW Monofásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 8000,
+    "potencia_ac_max": 8800,
+    "potencia_pv_max": 12000,
+    "mppt_numero": 2,
+    "mppt_corriente_max": 20,
+    "mppt_rango_voltaje": [
+      80,
+      600
+    ],
+    "mppt_corriente_cortocircuito_max": 30,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 380,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 150,
+    "bateria_corriente_descarga_max": 150,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 98.2,
+    "eficiencia_mppt": 99.7,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 230,
+    "fases": 1,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Polaridad inversa PV"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus"
+    ],
+    "dimensiones_mm": [
+      520,
+      420,
+      215
+    ],
+    "peso_kg": 30,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 10500,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_10kw_1f",
+    "nombre": "Inversor Híbrido 10kW Monofásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 10000,
+    "potencia_ac_max": 11000,
+    "potencia_pv_max": 15000,
+    "mppt_numero": 2,
+    "mppt_corriente_max": 22,
+    "mppt_rango_voltaje": [
+      80,
+      600
+    ],
+    "mppt_corriente_cortocircuito_max": 33,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 400,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 200,
+    "bateria_corriente_descarga_max": 200,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 98.3,
+    "eficiencia_mppt": 99.8,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 230,
+    "fases": 1,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Polaridad inversa PV"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus"
+    ],
+    "dimensiones_mm": [
+      560,
+      450,
+      225
+    ],
+    "peso_kg": 36,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 13000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_12kw_1f",
+    "nombre": "Inversor Híbrido 12kW Monofásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 12000,
+    "potencia_ac_max": 13200,
+    "potencia_pv_max": 18000,
+    "mppt_numero": 2,
+    "mppt_corriente_max": 25,
+    "mppt_rango_voltaje": [
+      80,
+      600
+    ],
+    "mppt_corriente_cortocircuito_max": 37,
+    "strings_por_mppt": 3,
+    "voltage_dc_nominal": 400,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 220,
+    "bateria_corriente_descarga_max": 220,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 98.5,
+    "eficiencia_mppt": 99.8,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 230,
+    "fases": 1,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Polaridad inversa PV"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      600,
+      480,
+      240
+    ],
+    "peso_kg": 42,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 15500,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_15kw_1f",
+    "nombre": "Inversor Híbrido 15kW Monofásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 15000,
+    "potencia_ac_max": 16500,
+    "potencia_pv_max": 22500,
+    "mppt_numero": 3,
+    "mppt_corriente_max": 25,
+    "mppt_rango_voltaje": [
+      100,
+      600
+    ],
+    "mppt_corriente_cortocircuito_max": 37,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 400,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 250,
+    "bateria_corriente_descarga_max": 250,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 98.5,
+    "eficiencia_mppt": 99.8,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 230,
+    "fases": 1,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Polaridad inversa PV"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      630,
+      500,
+      250
+    ],
+    "peso_kg": 48,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 19000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_16kw_1f",
+    "nombre": "Inversor Híbrido 16kW Monofásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 16000,
+    "potencia_ac_max": 17600,
+    "potencia_pv_max": 24000,
+    "mppt_numero": 3,
+    "mppt_corriente_max": 27,
+    "mppt_rango_voltaje": [
+      100,
+      650
+    ],
+    "mppt_corriente_cortocircuito_max": 40,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 420,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 280,
+    "bateria_corriente_descarga_max": 280,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 98.6,
+    "eficiencia_mppt": 99.8,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 230,
+    "fases": 1,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Polaridad inversa PV"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      650,
+      510,
+      255
+    ],
+    "peso_kg": 52,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 22400,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_5kw_3f",
+    "nombre": "Inversor Híbrido 5kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 5000,
+    "potencia_ac_max": 5500,
+    "potencia_pv_max": 7500,
+    "mppt_numero": 2,
+    "mppt_corriente_max": 14,
+    "mppt_rango_voltaje": [
+      180,
+      850
+    ],
+    "mppt_corriente_cortocircuito_max": 21,
+    "strings_por_mppt": 1,
+    "voltage_dc_nominal": 500,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 80,
+    "bateria_corriente_descarga_max": 80,
+    "bateria_compatibilidad": "LiFePO4 48V",
+    "eficiencia_max": 97.8,
+    "eficiencia_mppt": 99.6,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet"
+    ],
+    "dimensiones_mm": [
+      480,
+      380,
+      205
+    ],
+    "peso_kg": 26,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 7500,
+    "precio_estimado": true
   },
   {
     "id": "inv_hib_8kw_3f",
@@ -116,16 +576,19 @@
     "potencia_ac_nominal": 8000,
     "potencia_ac_max": 8800,
     "potencia_pv_max": 12000,
-    "mppt_numero": 4,
+    "mppt_numero": 3,
     "mppt_corriente_max": 16,
-    "mppt_rango_voltaje": [80, 520],
-    "mppt_corriente_cortocircuito_max": 25.6,
+    "mppt_rango_voltaje": [
+      200,
+      900
+    ],
+    "mppt_corriente_cortocircuito_max": 24,
     "strings_por_mppt": 1,
-    "voltage_dc_nominal": 400,
-    "bateria_tension": 400,
-    "bateria_corriente_carga_max": 50,
-    "bateria_corriente_descarga_max": 50,
-    "bateria_compatibilidad": "LiFePO4 HV",
+    "voltage_dc_nominal": 600,
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 100,
+    "bateria_corriente_descarga_max": 100,
+    "bateria_compatibilidad": "LiFePO4 48V",
     "eficiencia_max": 98.2,
     "eficiencia_mppt": 99.8,
     "forma_onda": "Sinusoidal pura",
@@ -138,14 +601,30 @@
       "Cortocircuito",
       "Sobretemperatura",
       "Anti-islanding",
-      "Polaridad inversa",
       "Desequilibrio de fases"
     ],
-    "comunicacion": ["RS485", "WiFi", "Ethernet", "Modbus"],
-    "dimensiones_mm": [550, 450, 250],
-    "peso_kg": 35,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus"
+    ],
+    "dimensiones_mm": [
+      530,
+      430,
+      230
+    ],
+    "peso_kg": 33,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 10500,
+    "precio_estimado": true
   },
   {
     "id": "inv_hib_10kw_3f",
@@ -154,16 +633,19 @@
     "potencia_ac_nominal": 10000,
     "potencia_ac_max": 11000,
     "potencia_pv_max": 15000,
-    "mppt_numero": 4,
-    "mppt_corriente_max": 22,
-    "mppt_rango_voltaje": [180, 1000],
-    "mppt_corriente_cortocircuito_max": 33,
+    "mppt_numero": 3,
+    "mppt_corriente_max": 20,
+    "mppt_rango_voltaje": [
+      200,
+      1000
+    ],
+    "mppt_corriente_cortocircuito_max": 30,
     "strings_por_mppt": 2,
     "voltage_dc_nominal": 600,
-    "bateria_tension": 400,
-    "bateria_corriente_carga_max": 75,
-    "bateria_corriente_descarga_max": 75,
-    "bateria_compatibilidad": "LiFePO4 HV",
+    "bateria_tension": 48,
+    "bateria_corriente_carga_max": 120,
+    "bateria_corriente_descarga_max": 120,
+    "bateria_compatibilidad": "LiFePO4 48V",
     "eficiencia_max": 98.5,
     "eficiencia_mppt": 99.9,
     "forma_onda": "Sinusoidal pura",
@@ -176,14 +658,31 @@
       "Cortocircuito",
       "Sobretemperatura",
       "Anti-islanding",
-      "Polaridad inversa",
       "Desequilibrio de fases"
     ],
-    "comunicacion": ["RS485", "WiFi", "Ethernet", "Modbus", "CAN"],
-    "dimensiones_mm": [600, 500, 280],
-    "peso_kg": 45,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      580,
+      470,
+      250
+    ],
+    "peso_kg": 42,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 13000,
+    "precio_estimado": true
   },
   {
     "id": "inv_hib_12kw_3f",
@@ -193,15 +692,18 @@
     "potencia_ac_max": 13200,
     "potencia_pv_max": 18000,
     "mppt_numero": 4,
-    "mppt_corriente_max": 32,
-    "mppt_rango_voltaje": [200, 1100],
-    "mppt_corriente_cortocircuito_max": 48,
+    "mppt_corriente_max": 22,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 33,
     "strings_por_mppt": 2,
-    "voltage_dc_nominal": 800,
+    "voltage_dc_nominal": 700,
     "bateria_tension": 400,
-    "bateria_corriente_carga_max": 100,
-    "bateria_corriente_descarga_max": 100,
-    "bateria_compatibilidad": "LiFePO4 HV",
+    "bateria_corriente_carga_max": 80,
+    "bateria_corriente_descarga_max": 80,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
     "eficiencia_max": 98.7,
     "eficiencia_mppt": 99.9,
     "forma_onda": "Sinusoidal pura",
@@ -214,543 +716,53 @@
       "Cortocircuito",
       "Sobretemperatura",
       "Anti-islanding",
-      "Polaridad inversa",
       "Desequilibrio de fases"
     ],
-    "comunicacion": ["RS485", "WiFi", "Ethernet", "Modbus", "CAN", "PLC"],
-    "dimensiones_mm": [650, 550, 300],
-    "peso_kg": 55,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "victron_multiplus_2_24_3000",
-    "nombre": "Victron Energy MultiPlus-II 24/3000",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 3000,
-    "potencia_ac_max": 3200,
-    "potencia_pv_max": 0,
-    "mppt_numero": 0,
-    "mppt_corriente_max": 0,
-    "mppt_rango_voltaje": [0, 0],
-    "mppt_corriente_cortocircuito_max": 0,
-    "strings_por_mppt": 0,
-    "voltage_dc_nominal": 24,
-    "bateria_tension": 24,
-    "bateria_corriente_carga_max": 70,
-    "bateria_corriente_descarga_max": 70,
-    "bateria_compatibilidad": "LiFePO4, AGM, Gel",
-    "eficiencia_max": 94,
-    "eficiencia_mppt": 0,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding",
-      "Polaridad inversa"
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
     ],
-    "comunicacion": ["VE.Bus", "Bluetooth", "VE.Direct"],
-    "dimensiones_mm": [375, 218, 108],
-    "peso_kg": 11.5,
-    "temperatura_operacion": [-40, 65],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "victron_multiplus_2_48_5000",
-    "nombre": "Victron Energy MultiPlus-II 48/5000",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 5000,
-    "potencia_ac_max": 5200,
-    "potencia_pv_max": 0,
-    "mppt_numero": 0,
-    "mppt_corriente_max": 0,
-    "mppt_rango_voltaje": [0, 0],
-    "mppt_corriente_cortocircuito_max": 0,
-    "strings_por_mppt": 0,
-    "voltage_dc_nominal": 48,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 100,
-    "bateria_corriente_descarga_max": 100,
-    "bateria_compatibilidad": "LiFePO4, AGM, Gel",
-    "eficiencia_max": 95,
-    "eficiencia_mppt": 0,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding",
-      "Polaridad inversa"
+    "dimensiones_mm": [
+      620,
+      510,
+      265
     ],
-    "comunicacion": ["VE.Bus", "Bluetooth", "VE.Direct", "Ethernet"],
-    "dimensiones_mm": [525, 274, 134],
-    "peso_kg": 22.5,
-    "temperatura_operacion": [-40, 65],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "solaredge_energy_hub_7_6k",
-    "nombre": "SolarEdge Energy Hub 7.6kW",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 7600,
-    "potencia_ac_max": 8000,
-    "potencia_pv_max": 11400,
-    "mppt_numero": 2,
-    "mppt_corriente_max": 20,
-    "mppt_rango_voltaje": [0, 500],
-    "mppt_corriente_cortocircuito_max": 30,
-    "strings_por_mppt": 1,
-    "voltage_dc_nominal": 380,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 90,
-    "bateria_corriente_descarga_max": 90,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 97.5,
-    "eficiencia_mppt": 99.5,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding",
-      "Optimizadores integrados"
-    ],
-    "comunicacion": ["WiFi", "Ethernet", "Modbus", "CAN"],
-    "dimensiones_mm": [610, 435, 205],
-    "peso_kg": 38,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "solaredge_energy_hub_11_4k",
-    "nombre": "SolarEdge Energy Hub 11.4kW",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 11400,
-    "potencia_ac_max": 12000,
-    "potencia_pv_max": 17100,
-    "mppt_numero": 3,
-    "mppt_corriente_max": 22,
-    "mppt_rango_voltaje": [0, 500],
-    "mppt_corriente_cortocircuito_max": 33,
-    "strings_por_mppt": 1,
-    "voltage_dc_nominal": 380,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 120,
-    "bateria_corriente_descarga_max": 120,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98,
-    "eficiencia_mppt": 99.7,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 400,
-    "fases": 3,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding",
-      "Optimizadores integrados"
-    ],
-    "comunicacion": ["WiFi", "Ethernet", "Modbus", "CAN"],
-    "dimensiones_mm": [710, 525, 245],
     "peso_kg": 52,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "sol_ark_12k",
-    "nombre": "Sol-Ark 12K Hybrid",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 12000,
-    "potencia_ac_max": 13200,
-    "potencia_pv_max": 18000,
-    "mppt_numero": 2,
-    "mppt_corriente_max": 18,
-    "mppt_rango_voltaje": [150, 425],
-    "mppt_corriente_cortocircuito_max": 27,
-    "strings_por_mppt": 3,
-    "voltage_dc_nominal": 370,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 175,
-    "bateria_corriente_descarga_max": 175,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 97.5,
-    "eficiencia_mppt": 99.5,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 240,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding",
-      "Polaridad inversa"
+    "temperatura_operacion": [
+      -25,
+      60
     ],
-    "comunicacion": ["WiFi", "Ethernet", "RS485", "CAN"],
-    "dimensiones_mm": [660, 460, 250],
-    "peso_kg": 56,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 15500,
+    "precio_estimado": true
   },
   {
-    "id": "sol_ark_15k_3ph",
-    "nombre": "Sol-Ark 15K-3P Hybrid",
+    "id": "inv_hib_15kw_3f",
+    "nombre": "Inversor Híbrido 15kW Trifásico",
     "tipo": "hibrido",
     "potencia_ac_nominal": 15000,
     "potencia_ac_max": 16500,
     "potencia_pv_max": 22500,
     "mppt_numero": 4,
     "mppt_corriente_max": 22,
-    "mppt_rango_voltaje": [150, 500],
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
     "mppt_corriente_cortocircuito_max": 33,
     "strings_por_mppt": 2,
-    "voltage_dc_nominal": 400,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 200,
-    "bateria_corriente_descarga_max": 200,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98,
-    "eficiencia_mppt": 99.8,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 400,
-    "fases": 3,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding",
-      "Polaridad inversa"
-    ],
-    "comunicacion": ["WiFi", "Ethernet", "RS485", "CAN"],
-    "dimensiones_mm": [710, 500, 280],
-    "peso_kg": 65,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "growatt_min_3000_tl_xh",
-    "nombre": "Growatt MIN 3000 TL-XH",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 3000,
-    "potencia_ac_max": 3300,
-    "potencia_pv_max": 4000,
-    "mppt_numero": 1,
-    "mppt_corriente_max": 13,
-    "mppt_rango_voltaje": [60, 550],
-    "mppt_corriente_cortocircuito_max": 19.5,
-    "strings_por_mppt": 2,
-    "voltage_dc_nominal": 360,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 60,
-    "bateria_corriente_descarga_max": 60,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 97.6,
-    "eficiencia_mppt": 99.3,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "Bluetooth", "RS485"],
-    "dimensiones_mm": [410, 320, 175],
-    "peso_kg": 16,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "growatt_min_5000_tl_xh",
-    "nombre": "Growatt MIN 5000 TL-XH",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 5000,
-    "potencia_ac_max": 5500,
-    "potencia_pv_max": 7500,
-    "mppt_numero": 2,
-    "mppt_corriente_max": 18,
-    "mppt_rango_voltaje": [60, 550],
-    "mppt_corriente_cortocircuito_max": 27,
-    "strings_por_mppt": 2,
-    "voltage_dc_nominal": 360,
-    "bateria_tension": 48,
+    "voltage_dc_nominal": 750,
+    "bateria_tension": 400,
     "bateria_corriente_carga_max": 100,
     "bateria_corriente_descarga_max": 100,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98.2,
-    "eficiencia_mppt": 99.5,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "Bluetooth", "RS485"],
-    "dimensiones_mm": [460, 360, 190],
-    "peso_kg": 23,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "growatt_min_10000_tl_xh_3p",
-    "nombre": "Growatt MIN 10000 TL-XH 3P",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 10000,
-    "potencia_ac_max": 11000,
-    "potencia_pv_max": 15000,
-    "mppt_numero": 4,
-    "mppt_corriente_max": 25,
-    "mppt_rango_voltaje": [180, 1000],
-    "mppt_corriente_cortocircuito_max": 37.5,
-    "strings_por_mppt": 2,
-    "voltage_dc_nominal": 600,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 150,
-    "bateria_corriente_descarga_max": 150,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98.5,
-    "eficiencia_mppt": 99.8,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 400,
-    "fases": 3,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "Ethernet", "RS485"],
-    "dimensiones_mm": [620, 520, 270],
-    "peso_kg": 48,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "deye_sun_5k_sg01lp1_eu",
-    "nombre": "Deye SUN-5K-SG01LP1-EU",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 5000,
-    "potencia_ac_max": 5500,
-    "potencia_pv_max": 8000,
-    "mppt_numero": 2,
-    "mppt_corriente_max": 22,
-    "mppt_rango_voltaje": [125, 425],
-    "mppt_corriente_cortocircuito_max": 33,
-    "strings_por_mppt": 2,
-    "voltage_dc_nominal": 370,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 120,
-    "bateria_corriente_descarga_max": 120,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 97.5,
-    "eficiencia_mppt": 99.5,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "RS485", "CAN"],
-    "dimensiones_mm": [460, 400, 195],
-    "peso_kg": 24.5,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "deye_sun_8k_sg01lp1_eu",
-    "nombre": "Deye SUN-8K-SG01LP1-EU",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 8000,
-    "potencia_ac_max": 8800,
-    "potencia_pv_max": 12000,
-    "mppt_numero": 2,
-    "mppt_corriente_max": 25,
-    "mppt_rango_voltaje": [125, 425],
-    "mppt_corriente_cortocircuito_max": 37.5,
-    "strings_por_mppt": 3,
-    "voltage_dc_nominal": 370,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 150,
-    "bateria_corriente_descarga_max": 150,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98,
-    "eficiencia_mppt": 99.7,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "RS485", "CAN"],
-    "dimensiones_mm": [520, 450, 210],
-    "peso_kg": 32,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "sma_sunny_boy_storage_5_0",
-    "nombre": "SMA Sunny Boy Storage 5.0",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 5000,
-    "potencia_ac_max": 5200,
-    "potencia_pv_max": 0,
-    "mppt_numero": 0,
-    "mppt_corriente_max": 0,
-    "mppt_rango_voltaje": [0, 0],
-    "mppt_corriente_cortocircuito_max": 0,
-    "strings_por_mppt": 0,
-    "voltage_dc_nominal": 48,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 100,
-    "bateria_corriente_descarga_max": 100,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 96,
-    "eficiencia_mppt": 0,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "Ethernet", "Sunny Portal"],
-    "dimensiones_mm": [450, 350, 180],
-    "peso_kg": 20,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "sma_sunny_island_8_0h",
-    "nombre": "SMA Sunny Island 8.0H",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 8000,
-    "potencia_ac_max": 8500,
-    "potencia_pv_max": 0,
-    "mppt_numero": 0,
-    "mppt_corriente_max": 0,
-    "mppt_rango_voltaje": [0, 0],
-    "mppt_corriente_cortocircuito_max": 0,
-    "strings_por_mppt": 0,
-    "voltage_dc_nominal": 48,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 120,
-    "bateria_corriente_descarga_max": 120,
-    "bateria_compatibilidad": "LiFePO4, Plomo-ácido",
-    "eficiencia_max": 95,
-    "eficiencia_mppt": 0,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["Ethernet", "RS485", "SMA Grid Guard"],
-    "dimensiones_mm": [500, 400, 220],
-    "peso_kg": 38,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "fronius_symo_gen24_6_0_plus",
-    "nombre": "Fronius Symo GEN24 6.0 Plus",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 6000,
-    "potencia_ac_max": 6300,
-    "potencia_pv_max": 9000,
-    "mppt_numero": 2,
-    "mppt_corriente_max": 30,
-    "mppt_rango_voltaje": [80, 800],
-    "mppt_corriente_cortocircuito_max": 45,
-    "strings_por_mppt": 2,
-    "voltage_dc_nominal": 400,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 100,
-    "bateria_corriente_descarga_max": 100,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98.2,
-    "eficiencia_mppt": 99.8,
-    "forma_onda": "Sinusoidal pura",
-    "frecuencia_salida": 50,
-    "tension_salida": 230,
-    "fases": 1,
-    "protecciones": [
-      "Sobretensión",
-      "Sobrecorriente",
-      "Cortocircuito",
-      "Sobretemperatura",
-      "Anti-islanding"
-    ],
-    "comunicacion": ["WiFi", "Ethernet", "Fronius Solar.web"],
-    "dimensiones_mm": [520, 420, 200],
-    "peso_kg": 30,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
-  },
-  {
-    "id": "fronius_symo_gen24_10_0_plus_3p",
-    "nombre": "Fronius Symo GEN24 10.0 Plus 3P",
-    "tipo": "hibrido",
-    "potencia_ac_nominal": 10000,
-    "potencia_ac_max": 10500,
-    "potencia_pv_max": 15000,
-    "mppt_numero": 3,
-    "mppt_corriente_max": 35,
-    "mppt_rango_voltaje": [200, 1000],
-    "mppt_corriente_cortocircuito_max": 52.5,
-    "strings_por_mppt": 2,
-    "voltage_dc_nominal": 600,
-    "bateria_tension": 48,
-    "bateria_corriente_carga_max": 150,
-    "bateria_corriente_descarga_max": 150,
-    "bateria_compatibilidad": "LiFePO4",
-    "eficiencia_max": 98.5,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 98.8,
     "eficiencia_mppt": 99.9,
     "forma_onda": "Sinusoidal pura",
     "frecuencia_salida": 50,
@@ -761,12 +773,439 @@
       "Sobrecorriente",
       "Cortocircuito",
       "Sobretemperatura",
-      "Anti-islanding"
+      "Anti-islanding",
+      "Desequilibrio de fases"
     ],
-    "comunicacion": ["WiFi", "Ethernet", "Fronius Solar.web"],
-    "dimensiones_mm": [620, 500, 240],
-    "peso_kg": 50,
-    "temperatura_operacion": [-25, 60],
-    "humedad_operacion": [0, 95]
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      660,
+      540,
+      275
+    ],
+    "peso_kg": 60,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 19000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_16kw_3f",
+    "nombre": "Inversor Híbrido 16kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 16000,
+    "potencia_ac_max": 17600,
+    "potencia_pv_max": 24000,
+    "mppt_numero": 4,
+    "mppt_corriente_max": 25,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 37,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 750,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 110,
+    "bateria_corriente_descarga_max": 110,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 98.8,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      670,
+      545,
+      278
+    ],
+    "peso_kg": 62,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 22400,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_17kw_3f",
+    "nombre": "Inversor Híbrido 17kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 17000,
+    "potencia_ac_max": 18700,
+    "potencia_pv_max": 25500,
+    "mppt_numero": 4,
+    "mppt_corriente_max": 25,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 37,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 750,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 120,
+    "bateria_corriente_descarga_max": 120,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 98.8,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      680,
+      555,
+      282
+    ],
+    "peso_kg": 65,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 23800,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_20kw_3f",
+    "nombre": "Inversor Híbrido 20kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 20000,
+    "potencia_ac_max": 22000,
+    "potencia_pv_max": 30000,
+    "mppt_numero": 4,
+    "mppt_corriente_max": 30,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 45,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 800,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 140,
+    "bateria_corriente_descarga_max": 140,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 98.9,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      700,
+      580,
+      295
+    ],
+    "peso_kg": 72,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 26000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_25kw_3f",
+    "nombre": "Inversor Híbrido 25kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 25000,
+    "potencia_ac_max": 27500,
+    "potencia_pv_max": 37500,
+    "mppt_numero": 6,
+    "mppt_corriente_max": 25,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 37,
+    "strings_por_mppt": 2,
+    "voltage_dc_nominal": 900,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 175,
+    "bateria_corriente_descarga_max": 175,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 99,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      740,
+      620,
+      315
+    ],
+    "peso_kg": 82,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 32000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_30kw_3f",
+    "nombre": "Inversor Híbrido 30kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 30000,
+    "potencia_ac_max": 33000,
+    "potencia_pv_max": 45000,
+    "mppt_numero": 6,
+    "mppt_corriente_max": 30,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 45,
+    "strings_por_mppt": 3,
+    "voltage_dc_nominal": 900,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 210,
+    "bateria_corriente_descarga_max": 210,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 99,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN"
+    ],
+    "dimensiones_mm": [
+      800,
+      650,
+      345
+    ],
+    "peso_kg": 96,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 38000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_40kw_3f",
+    "nombre": "Inversor Híbrido 40kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 40000,
+    "potencia_ac_max": 44000,
+    "potencia_pv_max": 60000,
+    "mppt_numero": 8,
+    "mppt_corriente_max": 30,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 45,
+    "strings_por_mppt": 3,
+    "voltage_dc_nominal": 1000,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 280,
+    "bateria_corriente_descarga_max": 280,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 99,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN",
+      "PLC"
+    ],
+    "dimensiones_mm": [
+      900,
+      700,
+      380
+    ],
+    "peso_kg": 122,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 56000,
+    "precio_estimado": true
+  },
+  {
+    "id": "inv_hib_50kw_3f",
+    "nombre": "Inversor Híbrido 50kW Trifásico",
+    "tipo": "hibrido",
+    "potencia_ac_nominal": 50000,
+    "potencia_ac_max": 55000,
+    "potencia_pv_max": 75000,
+    "mppt_numero": 8,
+    "mppt_corriente_max": 35,
+    "mppt_rango_voltaje": [
+      200,
+      1100
+    ],
+    "mppt_corriente_cortocircuito_max": 52,
+    "strings_por_mppt": 3,
+    "voltage_dc_nominal": 1000,
+    "bateria_tension": 400,
+    "bateria_corriente_carga_max": 350,
+    "bateria_corriente_descarga_max": 350,
+    "bateria_compatibilidad": "LiFePO4 HV 400V",
+    "eficiencia_max": 99.1,
+    "eficiencia_mppt": 99.9,
+    "forma_onda": "Sinusoidal pura",
+    "frecuencia_salida": 50,
+    "tension_salida": 400,
+    "fases": 3,
+    "protecciones": [
+      "Sobretensión",
+      "Sobrecorriente",
+      "Cortocircuito",
+      "Sobretemperatura",
+      "Anti-islanding",
+      "Desequilibrio de fases"
+    ],
+    "comunicacion": [
+      "WiFi",
+      "RS485",
+      "Ethernet",
+      "Modbus",
+      "CAN",
+      "PLC"
+    ],
+    "dimensiones_mm": [
+      1000,
+      760,
+      400
+    ],
+    "peso_kg": 155,
+    "temperatura_operacion": [
+      -25,
+      60
+    ],
+    "humedad_operacion": [
+      0,
+      95
+    ],
+    "precio_ud": 70000,
+    "precio_estimado": true
   }
 ]

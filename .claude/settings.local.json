@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(f'{b[\\\\\"id\\\\\"]}: {b[\\\\\"capacidad_nominal_kwh\\\\\"]}kWh nom / {b[\\\\\"capacidad_util_kwh\\\\\"]}kWh útil | {b[\\\\\"tension_nominal\\\\\"]}V | dims={b[\\\\\"dimensiones_mm\\\\\"]}mm'\\) for b in data]\")",
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(f'{d[\\\\\"id\\\\\"]}: {d[\\\\\"potencia_ac_nominal\\\\\"]/1000:.0f}kW | fases={d[\\\\\"fases\\\\\"]}'\\) for d in data]\")",
+      "Bash(python -c ' *)",
+      "Bash(node -e \"const p=require\\('./src/data/paneles_monofaciales.json'\\)[0]; console.log\\('ancho_mm:', p.ancho_mm, 'alto_mm:', p.alto_mm\\)\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
