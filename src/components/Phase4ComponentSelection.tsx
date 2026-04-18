@@ -52,6 +52,7 @@ function ChipSelector({
   selected,
   recommended,
   minValue,
+  warnBelow,
   formatChip,
   onSelect,
   accentColor,
@@ -60,8 +61,10 @@ function ChipSelector({
   values: number[];
   selected: number;
   recommended: number;
-  /** Values strictly below this are locked (worse than recommended). */
+  /** Values strictly below this are locked (not selectable). */
   minValue?: number;
+  /** Values strictly below this are shown in red but remain selectable. */
+  warnBelow?: number;
   formatChip: (v: number) => string;
   onSelect: (v: number) => void;
   accentColor: "orange" | "green";
@@ -73,7 +76,7 @@ function ChipSelector({
     },
     green: {
       chip: "bg-green-500 text-white border-green-500",
-      rec: "border-green-400 text-green-600 dark:text-green-400",
+      rec: "border-green-500 text-green-600 dark:text-green-400",
     },
   }[accentColor];
 
@@ -88,11 +91,17 @@ function ChipSelector({
           elegir igual o superior
         </p>
       )}
+      {warnBelow !== undefined && (
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">
+          🟢 Verde = capacidad recomendada · 🔴 Rojo = inferior a la recomendada (puedes elegirla pero puede ser insuficiente)
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         {values.map((v) => {
           const isSelected = v === selected;
           const isRec = v === recommended;
           const isLocked = minValue !== undefined && v < minValue;
+          const isWarn = warnBelow !== undefined && v < warnBelow;
           return (
             <button
               key={v}
@@ -104,8 +113,14 @@ function ChipSelector({
                 isLocked
                   ? "border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-gray-900 cursor-not-allowed line-through"
                   : isSelected
-                    ? accent.chip
-                    : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-500 dark:hover:border-gray-400 bg-white dark:bg-gray-800",
+                    ? isWarn
+                      ? "bg-red-500 text-white border-red-500"
+                      : accent.chip
+                    : isWarn
+                      ? "border-red-400 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:border-red-500"
+                      : isRec
+                        ? "border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:border-green-600"
+                        : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-500 dark:hover:border-gray-400 bg-white dark:bg-gray-800",
               ].join(" ")}
             >
               {isRec && !isSelected && !isLocked && (
@@ -1419,11 +1434,16 @@ const Phase4ComponentSelection: React.FC<Props> = ({
             values={allBatteryKwh}
             selected={selectedKwh}
             recommended={recommendedKwh}
-            minValue={recommendedKwh}
+            warnBelow={recommendedKwh}
             formatChip={(v) => `${v} kWh`}
             onSelect={setSelectedKwh}
             accentColor="green"
           />
+          {selectedKwh < recommendedKwh && (
+            <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-xl text-xs text-red-700 dark:text-red-300">
+              ⚠️ <strong>Capacidad insuficiente:</strong> has elegido {selectedKwh} kWh útiles pero tu consumo requiere {batteryCapNeeded.toFixed(1)} kWh. Con esta batería necesitarás {Math.ceil(batteryCapNeeded / selectedKwh)} unidades y puede que no cubra toda la noche.
+            </div>
+          )}
 
           {/* Catalog browser: all batteries at selected kWh */}
           {batteriesAtKwh.length > 1 && (
