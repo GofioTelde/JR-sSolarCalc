@@ -388,7 +388,8 @@ function AppContent() {
         {/* ---------------------------------------------------------------- */}
         <footer className="mt-8 text-center print:hidden">
           <p className="text-gray-500 dark:text-gray-400 text-xs">
-            ⚡ JR's SolarCalc v1.0 · Dimensionado profesional de instalaciones solares
+            ⚡ JR's SolarCalc v1.0 · Dimensionado profesional de instalaciones
+            solares
           </p>
           <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
             &copy; JR 2026. Todos los derechos reservados.
