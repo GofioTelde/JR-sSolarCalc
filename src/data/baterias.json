@@ -413,7 +413,7 @@
     "max_paralelo": 8,
     "garantia": 10,
     "autodescarga_mensual": 2,
-    "precio_ud": 1000,
+    "precio_ud": 1400,
     "precio_estimado": true
   },
   {
@@ -466,7 +466,7 @@
     "max_paralelo": 4,
     "garantia": 10,
     "autodescarga_mensual": 2,
-    "precio_ud": 2000,
+    "precio_ud": 2800,
     "precio_estimado": true
   },
   {
@@ -520,7 +520,7 @@
     "max_paralelo": 4,
     "garantia": 10,
     "autodescarga_mensual": 2,
-    "precio_ud": 4000,
+    "precio_ud": 5500,
     "precio_estimado": true
   }
 ]

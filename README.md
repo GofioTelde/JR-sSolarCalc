@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Calculadora Solar Fotovoltaica
 
-## Getting Started
+Herramienta web interactiva para el dimensionado y presupuesto de instalaciones solares fotovoltaicas residenciales e industriales.
 
-First, run the development server:
+## Funcionalidades
+
+- **Dimensionado automático** a partir del consumo eléctrico del usuario
+- **5 modalidades de instalación**: autoconsumo sin baterías, autoconsumo con vertido 0, autoconsumo con baterías, instalación aislada, respaldo UPS
+- **2 tipos de sistema**: híbrido (todo-en-uno) y componentes separados
+- **Soporte monofásico y trifásico**
+- **Catálogo de componentes** con precios estimados de mercado (sin IVA):
+  - Paneles solares monofaciales y bifaciales
+  - Inversores híbridos, de red y off-grid
+  - Controladores MPPT
+  - Baterías LiFePO4 (48V y HV)
+- **Resumen de presupuesto** con lista de materiales desglosada
+- **Contador de visitas** (accesible con la combinación de teclas `v` `i` `s`)
+
+## Stack técnico
+
+- [Next.js 14](https://nextjs.org) App Router
+- TypeScript estricto
+- Tailwind CSS
+- Supabase (contador de visitas)
+
+## Desarrollo local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en el navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Crea un archivo `.env.local` con:
 
-## Learn More
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Despliegue
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Compatible con [Vercel](https://vercel.com). Consulta la [documentación de despliegue de Next.js](https://nextjs.org/docs/app/building-your-application/deploying).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Los precios del catálogo son orientativos (mercado 2024, sin IVA) y pueden variar según proveedor y cantidades.

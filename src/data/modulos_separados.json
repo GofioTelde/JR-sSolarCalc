@@ -445,7 +445,7 @@
     "peso_kg": 35,
     "temperatura_operacion": [-20, 50],
     "humedad_operacion": [0, 90],
-    "precio_ud": 890,
+    "precio_ud": 1200,
     "precio_estimado": true
   },
   {
