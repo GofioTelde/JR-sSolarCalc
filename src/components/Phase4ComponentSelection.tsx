@@ -191,11 +191,11 @@ function DetailCard({
           {badge}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
         {rows.map((r, i) => (
-          <div key={i} className="flex justify-between text-xs">
-            <span className="text-gray-400 dark:text-gray-500">{r.label}</span>
-            <span className="font-medium text-gray-700 dark:text-gray-300">
+          <div key={i} className="flex justify-between gap-2 text-xs">
+            <span className="text-gray-400 dark:text-gray-500 shrink-0">{r.label}</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300 text-right break-words">
               {r.value}
             </span>
           </div>
@@ -235,108 +235,6 @@ function Section({
     </section>
   );
 }
-
-// ---------------------------------------------------------------------------
-// OptionCard (kept for inverters / MPPT which keep the 3-card layout)
-// ---------------------------------------------------------------------------
-
-interface OptionCardProps {
-  title: string;
-  metric: string;
-  metricUnit?: string;
-  specs: { label: string; value: string }[];
-  badge: string;
-  isSelected: boolean;
-  isRecommended: boolean;
-  isInsufficient?: boolean;
-  accent: string;
-  accentBg: string;
-  accentText: string;
-  onClick: () => void;
-}
-
-const OptionCard: React.FC<OptionCardProps> = ({
-  title,
-  metric,
-  metricUnit,
-  specs,
-  badge,
-  isSelected,
-  isRecommended,
-  isInsufficient,
-  accent,
-  accentBg,
-  accentText,
-  onClick,
-}) => (
-  <div
-    role="button"
-    tabIndex={0}
-    onClick={onClick}
-    onKeyDown={(e) => e.key === "Enter" && onClick()}
-    className={[
-      "relative cursor-pointer rounded-xl border-2 p-3 transition-all select-none",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-      isSelected
-        ? `${accent} ${accentBg} shadow-md`
-        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500",
-      isInsufficient ? "opacity-60" : "",
-    ]
-      .filter(Boolean)
-      .join(" ")}
-    aria-pressed={isSelected}
-  >
-    {isRecommended && (
-      <span className="absolute -top-2.5 -right-2.5 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
-        Rec.
-      </span>
-    )}
-    {isSelected && (
-      <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
-        <svg
-          className="w-2.5 h-2.5 text-white"
-          fill="none"
-          viewBox="0 0 12 12"
-          stroke="currentColor"
-          strokeWidth={2.5}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
-        </svg>
-      </div>
-    )}
-    <p className="font-semibold text-gray-800 dark:text-white text-xs mb-1 leading-snug pr-4 pl-1">
-      {title}
-    </p>
-    <div className={`text-xl font-bold ${accentText} leading-none mb-2`}>
-      {metric}
-      {metricUnit && (
-        <span className="text-xs font-normal text-gray-500 ml-1">
-          {metricUnit}
-        </span>
-      )}
-    </div>
-    <div className="space-y-0.5 mb-2">
-      {specs.map((s, i) => (
-        <div key={i} className="flex justify-between text-[11px]">
-          <span className="text-gray-400 dark:text-gray-500">{s.label}</span>
-          <span className="font-medium text-gray-700 dark:text-gray-300">
-            {s.value}
-          </span>
-        </div>
-      ))}
-    </div>
-    <div
-      className={`text-center text-xs font-semibold py-1 rounded-lg ${isSelected ? `${accentBg} ${accentText}` : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"}`}
-    >
-      {badge}
-    </div>
-    {isInsufficient && (
-      <div className="mt-1 text-center text-[10px] text-red-500">
-        ⚠ Potencia insuficiente
-      </div>
-    )}
-  </div>
-);
 
 // ---------------------------------------------------------------------------
 // InverterCard — full-spec card for hybrid, off-grid and grid-tie inverters
@@ -495,10 +393,10 @@ const InverterCard: React.FC<InverterCardProps> = ({
       aria-pressed={isSelected}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between mb-2 gap-2">
+        <div className="flex items-start gap-2 min-w-0 flex-1">
           {isSelected && (
-            <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg
                 className="w-2.5 h-2.5 text-white"
                 fill="none"
@@ -514,7 +412,7 @@ const InverterCard: React.FC<InverterCardProps> = ({
               </svg>
             </div>
           )}
-          <span className="font-bold text-gray-800 dark:text-white text-sm leading-tight">
+          <span className="font-bold text-gray-800 dark:text-white text-sm leading-tight break-words">
             {inv.nombre}
           </span>
         </div>
@@ -536,14 +434,14 @@ const InverterCard: React.FC<InverterCardProps> = ({
       </div>
 
       {/* Spec grid */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
         {specRows.map((r, i) => (
-          <div key={i} className="flex justify-between gap-1">
-            <span className="text-gray-400 dark:text-gray-500 truncate">
+          <div key={i} className="flex justify-between gap-2">
+            <span className="text-gray-400 dark:text-gray-500 shrink-0">
               {r.label}
             </span>
             <span
-              className={`font-medium ${r.highlight ? "text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"} text-right whitespace-nowrap`}
+              className={`font-medium ${r.highlight ? "text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"} text-right break-words`}
             >
               {r.value}
             </span>
@@ -603,10 +501,10 @@ const MpptCard: React.FC<MpptCardProps> = ({
       .join(" ")}
     aria-pressed={isSelected}
   >
-    <div className="flex items-center justify-between mb-2">
-      <div className="flex items-center gap-2">
+    <div className="flex items-start justify-between mb-2 gap-2">
+      <div className="flex items-start gap-2 min-w-0 flex-1">
         {isSelected && (
-          <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
+          <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0 mt-0.5">
             <svg
               className="w-2.5 h-2.5 text-white"
               fill="none"
@@ -622,7 +520,7 @@ const MpptCard: React.FC<MpptCardProps> = ({
             </svg>
           </div>
         )}
-        <span className="font-bold text-gray-800 dark:text-white text-sm">
+        <span className="font-bold text-gray-800 dark:text-white text-sm break-words">
           {mppt.nombre}
         </span>
       </div>
@@ -642,7 +540,7 @@ const MpptCard: React.FC<MpptCardProps> = ({
         </span>
       </div>
     </div>
-    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
       {[
         {
           label: "Tensión entrada máx.",
@@ -667,12 +565,12 @@ const MpptCard: React.FC<MpptCardProps> = ({
           value: `${mppt.temperatura_operacion[0]}…${mppt.temperatura_operacion[1]} °C`,
         },
       ].map((r, i) => (
-        <div key={i} className="flex justify-between gap-1">
-          <span className="text-gray-400 dark:text-gray-500 truncate">
+        <div key={i} className="flex justify-between gap-2">
+          <span className="text-gray-400 dark:text-gray-500 shrink-0">
             {r.label}
           </span>
           <span
-            className={`font-medium ${r.highlight ? "text-yellow-700 dark:text-yellow-300" : "text-gray-700 dark:text-gray-300"} text-right whitespace-nowrap`}
+            className={`font-medium ${r.highlight ? "text-yellow-700 dark:text-yellow-300" : "text-gray-700 dark:text-gray-300"} text-right break-words`}
           >
             {r.value}
           </span>
@@ -1042,13 +940,8 @@ const Phase4ComponentSelection: React.FC<Props> = ({
   const tiltRad = (tiltDeg * Math.PI) / 180;
   const heightPortraitM = selectedPanel ? selectedPanel.ancho_mm / 1000 : 1.75;
   const heightLandscapeM = selectedPanel ? selectedPanel.alto_mm / 1000 : 0.54;
-  // Use recommended orientation for cost/string calc
-  const heightAlongSlopeM =
-    panelOrientation === "portrait" ? heightPortraitM : heightLandscapeM;
   const topEdgePortraitM = bottomEdgeM + heightPortraitM * Math.sin(tiltRad);
   const topEdgeLandscapeM = bottomEdgeM + heightLandscapeM * Math.sin(tiltRad);
-  const topEdgeM =
-    panelOrientation === "portrait" ? topEdgePortraitM : topEdgeLandscapeM;
 
   // Row spacing — for both orientations
   const latitude = data.location?.latitude ?? 37;
