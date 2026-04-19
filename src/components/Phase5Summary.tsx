@@ -25,12 +25,12 @@ const ALL_PROT = proteccionesData as Proteccion[];
 // ---------------------------------------------------------------------------
 
 const ALL = [
-  ...panelesMono  as Panel[],
-  ...panelesBi    as Panel[],
-  ...bateriasData as Bateria[],
-  ...inversoresHib as InversorHibrido[],
-  ...inversoresRed as InversorRed[],
-  ...modulosSep   as (ControladorMPPT | InversorOffGrid)[],
+  ...(panelesMono  as unknown as Panel[]),
+  ...(panelesBi    as unknown as Panel[]),
+  ...(bateriasData as unknown as Bateria[]),
+  ...(inversoresHib as unknown as InversorHibrido[]),
+  ...(inversoresRed as unknown as InversorRed[]),
+  ...(modulosSep   as unknown as (ControladorMPPT | InversorOffGrid)[]),
 ] as unknown as { id: string; nombre: string; [k: string]: unknown }[];
 
 function byId(id: string) { return ALL.find((c) => c.id === id) ?? null; }
@@ -625,9 +625,25 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
           lines.push({ label: (mpptObj as {nombre?:string}).nombre ?? "Controlador MPPT", explain: EXPLAIN.mppt, qty: 1, unit: "ud.", precioUd: pud, total: pud });
         }
         if (needsBatteries && battObj) {
-          const qty = selectedComponents.numBatteries ?? 1;
+          const totalModules = selectedComponents.numBatteries ?? 1;
           const pud = battObj.precio_ud ?? null;
-          lines.push({ label: battObj.nombre, explain: EXPLAIN.battery, qty, unit: "uds.", precioUd: pud, total: pud ? pud * qty : null });
+          const kwh_ud = battObj.capacidad_util_kwh as number;
+          const isHVBatt = (battObj.tipo as string) === "lifepo4_hv";
+          const isModularTower = isHVBatt && (battObj.tension_nominal as number) < 200;
+          if (isModularTower) {
+            const seriesPerTower = selectedComponents.batterySeriesPerTower ?? totalModules;
+            const towers = selectedComponents.batteryTowersCount ?? 1;
+            const totalKwh = (kwh_ud * totalModules).toFixed(1);
+            const kwhExplain = towers === 1
+              ? `${kwh_ud} kWh/mód. × ${seriesPerTower} mód. en serie = ${totalKwh} kWh · 1 torre`
+              : `${kwh_ud} kWh/mód. × ${seriesPerTower} mód./torre × ${towers} torres = ${totalKwh} kWh`;
+            lines.push({ label: battObj.nombre, explain: kwhExplain, qty: totalModules, unit: "mód.", precioUd: pud, total: pud ? pud * totalModules : null });
+          } else {
+            const totalKwh = (kwh_ud * totalModules).toFixed(1);
+            const hvTag = isHVBatt ? ` · ${battObj.tension_nominal as number}V HV` : "";
+            const kwhExplain = `${kwh_ud} kWh/ud × ${totalModules} = ${totalKwh} kWh útiles${hvTag}`;
+            lines.push({ label: battObj.nombre, explain: kwhExplain, qty: totalModules, unit: "uds.", precioUd: pud, total: pud ? pud * totalModules : null });
+          }
         }
         if (invObj) {
           const invTipo = (invObj as { tipo?: string }).tipo;
@@ -682,6 +698,28 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
                 </div>
               ))}
             </div>
+
+            {/* HV battery cost warning when many complete packs needed */}
+            {needsBatteries && battObj && (battObj.tipo as string) === "lifepo4_hv" && (battObj.tension_nominal as number) >= 200 && (selectedComponents.numBatteries ?? 0) > 2 && (() => {
+              const qty = selectedComponents.numBatteries ?? 0;
+              const kwh_ud = battObj.capacidad_util_kwh as number;
+              const totalKwh = (kwh_ud * qty).toFixed(1);
+              const pud = battObj.precio_ud as number | null;
+              const voltaje = battObj.tension_nominal as number;
+              return (
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl text-xs">
+                  <p className="font-bold text-amber-800 dark:text-amber-300 mb-1">
+                    ⚠️ Batería HV {voltaje}V — {qty} unidades ({totalKwh} kWh)
+                  </p>
+                  <p className="text-amber-700 dark:text-amber-400 mb-2">
+                    Las baterías HV de alta capacidad integran electrónica de potencia interna, lo que las hace más caras por kWh que las LV (48V). Con {qty} unidades el coste es elevado.{pud ? ` Precio/ud: ${pud.toLocaleString("es-ES")} €.` : ""}
+                  </p>
+                  <p className="text-amber-600 dark:text-amber-500">
+                    💡 Si tu inversor lo permite, considera cambiar a sistema LV (48V): baterías Pylontech US5000 a ~1.300 €/ud ofrecen 4,77 kWh cada una, con un coste total muy inferior para la misma capacidad.
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* Protections */}
             {protLines.length > 0 && (

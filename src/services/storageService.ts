@@ -46,6 +46,10 @@ export interface SelectedComponents {
   stringConfig?: StringConfig;
   /** Panel mounting orientation derived from available surface */
   panelOrientation?: "portrait" | "landscape";
+  /** For modular HV batteries (51V/100V stacked in series): modules per tower */
+  batterySeriesPerTower?: number;
+  /** For modular HV batteries: number of towers connected in parallel */
+  batteryTowersCount?: number;
 }
 
 export interface SolarCalcSnapshot {

@@ -302,9 +302,10 @@ export function calculateSolarSystem(
     (totalPanelPowerWp / 1000) * hsp * 365 * performanceFactor;
 
   // 7. Battery capacity needed (useful)
-  const dod = 0.9; // LiFePO4 at 90% DoD
+  // capacidad_util_kwh in the catalog already reflects the battery's DoD rating (80%).
+  // No extra DoD factor here — dividing again would inflate the figure and cause double-buying.
   const batteryCapacityNeededKWh = needsBatteries
-    ? (dailyEnergyKWh * autonomyDays) / dod
+    ? dailyEnergyKWh * autonomyDays
     : 0;
 
   // 8. Number of batteries

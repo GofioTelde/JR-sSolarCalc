@@ -22,6 +22,10 @@ import type {
   ControladorMPPT,
   InversorOffGrid,
 } from "@/types/catalog.types";
+import {
+  getBatteryVoltageClass,
+  getBatteryVoltageLabel,
+} from "@/services/componentCompatibility";
 
 import panelesMono from "@/data/paneles_monofaciales.json";
 import panelesBi from "@/data/paneles_bifaciales.json";
@@ -29,18 +33,43 @@ import bateriasData from "@/data/baterias.json";
 import inversoresHib from "@/data/inversores_hibridos.json";
 import inversoresRed from "@/data/inversores_red.json";
 import modulosSep from "@/data/modulos_separados.json";
+import kitsRaw from "@/data/kits.json";
 
-const ALL_PANELS_MONO = panelesMono as Panel[];
-const ALL_PANELS_BI = panelesBi as Panel[];
-const ALL_BATTERIES = bateriasData as Bateria[];
-const ALL_HYBRID = inversoresHib as InversorHibrido[];
-const ALL_RED = inversoresRed as InversorRed[];
-const ALL_MPPT = (modulosSep as (ControladorMPPT | InversorOffGrid)[]).filter(
-  (m) => m.tipo === "mppt",
-) as ControladorMPPT[];
+const ALL_PANELS_MONO = panelesMono as unknown as Panel[];
+const ALL_PANELS_BI = panelesBi as unknown as Panel[];
+const ALL_BATTERIES = bateriasData as unknown as Bateria[];
+const ALL_HYBRID = inversoresHib as unknown as InversorHibrido[];
+const ALL_RED = inversoresRed as unknown as InversorRed[];
+const ALL_MPPT = (
+  modulosSep as unknown as (ControladorMPPT | InversorOffGrid)[]
+).filter((m) => m.tipo === "mppt") as ControladorMPPT[];
 const ALL_OFFGRID = (
-  modulosSep as (ControladorMPPT | InversorOffGrid)[]
+  modulosSep as unknown as (ControladorMPPT | InversorOffGrid)[]
 ).filter((m) => m.tipo === "inversor") as InversorOffGrid[];
+
+interface Kit {
+  id: string;
+  nombre: string;
+  tipo_instalacion: string;
+  fases: number;
+  potencia_pv_wp: number;
+  energia_almacenada_kwh: number;
+  descripcion: string;
+  componentes: {
+    inversor_red_id?: string;
+    inversor_hibrido_id?: string;
+    inversor_offgrid_id?: string;
+    mppt_id?: string;
+    bateria_id?: string;
+    baterias_cantidad?: number;
+    paneles_cantidad: number;
+    panel_potencia_wp: number;
+  };
+  precio_total: number;
+  precio_estimado: boolean;
+  adecuado_consumo_kwh_dia: [number, number];
+}
+const ALL_KITS = kitsRaw as Kit[];
 
 // ---------------------------------------------------------------------------
 // Power/capacity chip selector
@@ -52,10 +81,8 @@ function ChipSelector({
   selected,
   recommended,
   minValue,
-  warnBelow,
   formatChip,
   onSelect,
-  accentColor,
 }: {
   label: string;
   values: number[];
@@ -63,45 +90,25 @@ function ChipSelector({
   recommended: number;
   /** Values strictly below this are locked (not selectable). */
   minValue?: number;
-  /** Values strictly below this are shown in red but remain selectable. */
-  warnBelow?: number;
   formatChip: (v: number) => string;
   onSelect: (v: number) => void;
-  accentColor: "orange" | "green";
 }) {
-  const accent = {
-    orange: {
-      chip: "bg-orange-500 text-white border-orange-500",
-      rec: "border-orange-400 text-orange-600 dark:text-orange-400",
-    },
-    green: {
-      chip: "bg-green-500 text-white border-green-500",
-      rec: "border-green-500 text-green-600 dark:text-green-400",
-    },
-  }[accentColor];
-
   return (
     <div className="mb-5">
       <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
         {label}
       </p>
-      {minValue !== undefined && (
-        <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-2">
-          🔒 Las opciones en gris no cubren el mínimo recomendado — sólo puedes
-          elegir igual o superior
-        </p>
-      )}
-      {warnBelow !== undefined && (
-        <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">
-          🟢 Verde = capacidad recomendada · 🔴 Rojo = inferior a la recomendada (puedes elegirla pero puede ser insuficiente)
-        </p>
-      )}
+      <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">
+        🟢 Verde = recomendado · 🔵 Azul = superior al recomendado (mejor, más caro) · 🔴 Rojo = inferior al recomendado
+        {minValue !== undefined && " · ⬜ Gris = no disponible (mínimo técnico)"}
+      </p>
       <div className="flex flex-wrap gap-2">
         {values.map((v) => {
           const isSelected = v === selected;
           const isRec = v === recommended;
+          const isBelow = v < recommended;
+          const isAbove = v > recommended;
           const isLocked = minValue !== undefined && v < minValue;
-          const isWarn = warnBelow !== undefined && v < warnBelow;
           return (
             <button
               key={v}
@@ -113,20 +120,22 @@ function ChipSelector({
                 isLocked
                   ? "border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-gray-900 cursor-not-allowed line-through"
                   : isSelected
-                    ? isWarn
-                      ? "bg-red-500 text-white border-red-500"
-                      : accent.chip
-                    : isWarn
-                      ? "border-red-400 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:border-red-500"
-                      : isRec
-                        ? "border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:border-green-600"
-                        : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-500 dark:hover:border-gray-400 bg-white dark:bg-gray-800",
+                    ? isRec
+                      ? "bg-green-500 text-white border-green-500 shadow-md"
+                      : isBelow
+                        ? "bg-red-500 text-white border-red-500 shadow-md"
+                        : "bg-blue-500 text-white border-blue-500 shadow-md"
+                    : isRec
+                      ? "border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40"
+                      : isBelow
+                        ? "border-red-400 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:border-red-500"
+                        : isAbove
+                          ? "border-blue-400 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:border-blue-500"
+                          : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-500 bg-white dark:bg-gray-800",
               ].join(" ")}
             >
               {isRec && !isSelected && !isLocked && (
-                <span
-                  className={`absolute -top-2 -right-1.5 text-[9px] font-bold border rounded-full px-1 bg-white dark:bg-gray-800 ${accent.rec}`}
-                >
+                <span className="absolute -top-2 -right-1.5 text-[9px] font-bold border border-green-400 rounded-full px-1 bg-white dark:bg-gray-800 text-green-600 dark:text-green-400">
                   Rec
                 </span>
               )}
@@ -194,7 +203,9 @@ function DetailCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
         {rows.map((r, i) => (
           <div key={i} className="flex justify-between gap-2 text-xs">
-            <span className="text-gray-400 dark:text-gray-500 shrink-0">{r.label}</span>
+            <span className="text-gray-400 dark:text-gray-500 shrink-0">
+              {r.label}
+            </span>
             <span className="font-medium text-gray-700 dark:text-gray-300 text-right break-words">
               {r.value}
             </span>
@@ -244,6 +255,7 @@ interface InverterCardProps {
   inv: InversorHibrido | InversorOffGrid | InversorRed;
   isSelected: boolean;
   isRecommended: boolean;
+  isSuperior: boolean;
   isInsufficient: boolean;
   minInverterKW: number;
   onClick: () => void;
@@ -253,6 +265,7 @@ const InverterCard: React.FC<InverterCardProps> = ({
   inv,
   isSelected,
   isRecommended,
+  isSuperior,
   isInsufficient,
   onClick,
 }) => {
@@ -381,12 +394,20 @@ const InverterCard: React.FC<InverterCardProps> = ({
       onKeyDown={(e) => !isInsufficient && e.key === "Enter" && onClick()}
       className={[
         "relative rounded-xl border-2 p-3 transition-all select-none mb-2",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
         isInsufficient
-          ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50 cursor-not-allowed"
+          ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 opacity-60 cursor-not-allowed"
           : isSelected
-            ? "cursor-pointer border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
-            : "cursor-pointer border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600",
+            ? isRecommended
+              ? "cursor-pointer border-green-500 bg-green-50 dark:bg-green-900/20 shadow-md"
+              : isSuperior
+                ? "cursor-pointer border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
+                : "cursor-pointer border-gray-400 bg-white dark:bg-gray-800 shadow-md"
+            : isRecommended
+              ? "cursor-pointer border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10 hover:border-green-500"
+              : isSuperior
+                ? "cursor-pointer border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 hover:border-blue-400"
+                : "cursor-pointer border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -396,7 +417,7 @@ const InverterCard: React.FC<InverterCardProps> = ({
       <div className="flex items-start justify-between mb-2 gap-2">
         <div className="flex items-start gap-2 min-w-0 flex-1">
           {isSelected && (
-            <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isRecommended ? "bg-green-500" : isSuperior ? "bg-blue-500" : "bg-gray-500"}`}>
               <svg
                 className="w-2.5 h-2.5 text-white"
                 fill="none"
@@ -418,16 +439,21 @@ const InverterCard: React.FC<InverterCardProps> = ({
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {isRecommended && (
+            <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+              Recomendado
+            </span>
+          )}
+          {isSuperior && !isRecommended && (
             <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-              Rec.
+              Superior
             </span>
           )}
           {isInsufficient && (
             <span className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-              ⚠ Baja
+              ⚠ Insuficiente
             </span>
           )}
-          <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+          <span className={`text-xl font-bold ${isRecommended ? "text-green-600 dark:text-green-400" : isSuperior ? "text-blue-600 dark:text-blue-400" : isInsufficient ? "text-red-500 dark:text-red-400" : "text-gray-600 dark:text-gray-400"}`}>
             {kw} kW
           </span>
         </div>
@@ -472,6 +498,7 @@ interface MpptCardProps {
   mppt: ControladorMPPT;
   isSelected: boolean;
   isRecommended: boolean;
+  isSuperior: boolean;
   isInsufficient: boolean;
   onClick: () => void;
 }
@@ -480,6 +507,7 @@ const MpptCard: React.FC<MpptCardProps> = ({
   mppt,
   isSelected,
   isRecommended,
+  isSuperior,
   isInsufficient,
   onClick,
 }) => (
@@ -490,12 +518,20 @@ const MpptCard: React.FC<MpptCardProps> = ({
     onKeyDown={(e) => !isInsufficient && e.key === "Enter" && onClick()}
     className={[
       "relative rounded-xl border-2 p-3 transition-all select-none mb-2",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
       isInsufficient
-        ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-50 cursor-not-allowed"
+        ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 opacity-60 cursor-not-allowed"
         : isSelected
-          ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 shadow-md cursor-pointer"
-          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-yellow-300 dark:hover:border-yellow-600 cursor-pointer",
+          ? isRecommended
+            ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-md cursor-pointer"
+            : isSuperior
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md cursor-pointer"
+              : "border-gray-400 bg-white dark:bg-gray-800 shadow-md cursor-pointer"
+          : isRecommended
+            ? "border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10 hover:border-green-500 cursor-pointer"
+            : isSuperior
+              ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 hover:border-blue-400 cursor-pointer"
+              : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 cursor-pointer",
     ]
       .filter(Boolean)
       .join(" ")}
@@ -504,7 +540,7 @@ const MpptCard: React.FC<MpptCardProps> = ({
     <div className="flex items-start justify-between mb-2 gap-2">
       <div className="flex items-start gap-2 min-w-0 flex-1">
         {isSelected && (
-          <div className="w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isRecommended ? "bg-green-500" : isSuperior ? "bg-blue-500" : "bg-gray-500"}`}>
             <svg
               className="w-2.5 h-2.5 text-white"
               fill="none"
@@ -526,16 +562,21 @@ const MpptCard: React.FC<MpptCardProps> = ({
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {isRecommended && (
-          <span className="bg-yellow-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-            Rec.
+          <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+            Recomendado
+          </span>
+        )}
+        {isSuperior && !isRecommended && (
+          <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+            Superior
           </span>
         )}
         {isInsufficient && (
           <span className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-            ⚠ Insuf.
+            ⚠ Insuficiente
           </span>
         )}
-        <span className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+        <span className={`text-xl font-bold ${isRecommended ? "text-green-600 dark:text-green-400" : isSuperior ? "text-blue-600 dark:text-blue-400" : isInsufficient ? "text-red-500 dark:text-red-400" : "text-gray-600 dark:text-gray-400"}`}>
           {mppt.corriente_max_salida} A
         </span>
       </div>
@@ -692,13 +733,21 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     [rawPanels],
   );
 
-  const allBatteryKwh = useMemo(
-    () =>
-      [...new Set(ALL_BATTERIES.map((b) => b.capacidad_util_kwh))].sort(
-        (a, b) => a - b,
-      ),
-    [],
-  );
+  // Declared early so allBatteryKwh can filter by it
+  const [selectedBatteryVoltageClass, setSelectedBatteryVoltageClass] =
+    useState<"LV" | "HV" | null>(null);
+
+  // Only show kWh chips matching the selected voltage class (LV or HV)
+  const allBatteryKwh = useMemo(() => {
+    const batteries = selectedBatteryVoltageClass
+      ? ALL_BATTERIES.filter(
+          (b) => getBatteryVoltageClass(b) === selectedBatteryVoltageClass,
+        )
+      : ALL_BATTERIES;
+    return [...new Set(batteries.map((b) => b.capacidad_util_kwh))].sort(
+      (a, b) => a - b,
+    );
+  }, [selectedBatteryVoltageClass]);
 
   // Recommended defaults — closest to required / minimal units
   const recommendedWp = useMemo(() => {
@@ -717,23 +766,26 @@ const Phase4ComponentSelection: React.FC<Props> = ({
   }, [allPanelWps, requiredPowerWp]);
 
   const recommendedKwh = useMemo(() => {
-    if (!needsBatteries || batteryCapNeeded === 0) return allBatteryKwh[0];
+    if (!needsBatteries || batteryCapNeeded === 0) return allBatteryKwh[0] ?? 0;
     return (
       allBatteryKwh.find((k) => k >= batteryCapNeeded) ??
       allBatteryKwh[allBatteryKwh.length - 1]
     );
   }, [allBatteryKwh, batteryCapNeeded, needsBatteries]);
 
-  // -------------------------------------------------------------------------
   // Selection state
-  // -------------------------------------------------------------------------
-
   const [selectedWp, setSelectedWp] = useState<number>(() => recommendedWp);
   const [selectedKwh, setSelectedKwh] = useState<number>(() => recommendedKwh);
   const [selectedInverterId, setSelectedInverterId] = useState<string>("");
   const [selectedMpptId, setSelectedMpptId] = useState<string | null>(null);
+  const [selectedKitId, setSelectedKitId] = useState<string | null>(null);
   const [showStringConfig, setShowStringConfig] = useState(false);
   const [bottomEdgeM, setBottomEdgeM] = useState<number>(0.3);
+
+  // HV batteries require a hybrid inverter — MPPT controllers and off-grid inverters
+  // work at 12/24/48V and are incompatible with a 100V+ battery bus.
+  const hvIncompatiblePath =
+    selectedBatteryVoltageClass === "HV" && useOffGridInverter;
   const [tiltDeg, setTiltDeg] = useState<number>(defaultTilt);
 
   // Restore from saved state
@@ -775,13 +827,21 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     [rawPanels, selectedWp],
   );
 
-  const batteriesAtKwh = useMemo(
-    () =>
-      ALL_BATTERIES.filter((b) => b.capacidad_util_kwh === selectedKwh).sort(
-        (a, b) => b.eficiencia_carga_descarga - a.eficiencia_carga_descarga,
-      ),
-    [selectedKwh],
-  );
+  const batteriesAtKwh = useMemo(() => {
+    let filtered = ALL_BATTERIES.filter(
+      (b) => b.capacidad_util_kwh === selectedKwh,
+    ).sort((a, b) => b.eficiencia_carga_descarga - a.eficiencia_carga_descarga);
+
+    // Filter by voltage class if selected
+    if (selectedBatteryVoltageClass) {
+      filtered = filtered.filter((b) => {
+        const batteryClass = getBatteryVoltageClass(b);
+        return batteryClass === selectedBatteryVoltageClass;
+      });
+    }
+
+    return filtered;
+  }, [selectedKwh, selectedBatteryVoltageClass]);
 
   // Explicit panel / battery selection within a tier
   const [selectedPanelId, setSelectedPanelId] = useState<string>("");
@@ -799,11 +859,38 @@ const Phase4ComponentSelection: React.FC<Props> = ({
   useEffect(() => {
     const best = ALL_BATTERIES.filter(
       (b) => b.capacidad_util_kwh === selectedKwh,
-    ).sort(
-      (a, b) => b.eficiencia_carga_descarga - a.eficiencia_carga_descarga,
-    )[0];
+    )
+      .filter((b) => {
+        if (selectedBatteryVoltageClass) {
+          const batteryClass = getBatteryVoltageClass(b);
+          return batteryClass === selectedBatteryVoltageClass;
+        }
+        return true;
+      })
+      .sort(
+        (a, b) => b.eficiencia_carga_descarga - a.eficiencia_carga_descarga,
+      )[0];
     if (best) setSelectedBatteryId(best.id);
-  }, [selectedKwh]);
+  }, [selectedKwh, selectedBatteryVoltageClass]);
+
+  // When voltage class changes → snap selectedKwh to a valid value for the new class
+  useEffect(() => {
+    if (allBatteryKwh.length === 0) return;
+    if (!allBatteryKwh.includes(selectedKwh)) {
+      // Pick closest valid value (prefer ≥ recommended, else largest available)
+      const snap =
+        allBatteryKwh.find((k) => k >= recommendedKwh) ??
+        allBatteryKwh[allBatteryKwh.length - 1];
+      setSelectedKwh(snap);
+    }
+  }, [selectedBatteryVoltageClass]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When battery voltage class changes → reset inverter selection to force re-selection
+  useEffect(() => {
+    if (useHybridInverter && selectedBatteryVoltageClass) {
+      setSelectedInverterId("");
+    }
+  }, [selectedBatteryVoltageClass, useHybridInverter]);
 
   // -------------------------------------------------------------------------
   // Derived panel/battery from selected ID
@@ -831,11 +918,29 @@ const Phase4ComponentSelection: React.FC<Props> = ({
         .filter((i) => i.fases === inverterPhases)
         .sort((a, b) => a.potencia_ac_nominal - b.potencia_ac_nominal);
     }
-    // híbrido — filter by phase
-    return [...ALL_HYBRID]
-      .filter((i) => i.fases === inverterPhases)
-      .sort((a, b) => a.potencia_ac_nominal - b.potencia_ac_nominal);
-  }, [useOffGridInverter, useGridTieInverter, inverterPhases]);
+    // híbrido — filter by phase AND battery voltage compatibility
+    let hybridInverters = [...ALL_HYBRID].filter(
+      (i) => i.fases === inverterPhases,
+    );
+
+    // If user has selected a battery voltage class, filter inverters accordingly
+    if (needsBatteries && selectedBatteryVoltageClass) {
+      hybridInverters = hybridInverters.filter((inv) => {
+        const invBatteryClass = inv.bateria_tension >= 100 ? "HV" : "LV";
+        return invBatteryClass === selectedBatteryVoltageClass;
+      });
+    }
+
+    return hybridInverters.sort(
+      (a, b) => a.potencia_ac_nominal - b.potencia_ac_nominal,
+    );
+  }, [
+    useOffGridInverter,
+    useGridTieInverter,
+    inverterPhases,
+    needsBatteries,
+    selectedBatteryVoltageClass,
+  ]);
 
   const mpptOptions = useMemo(
     () =>
@@ -843,6 +948,70 @@ const Phase4ComponentSelection: React.FC<Props> = ({
         (a, b) => a.corriente_max_salida - b.corriente_max_salida,
       ),
     [],
+  );
+
+  // Kits matching the current installation type and phase count
+  const matchingKits = useMemo(() => {
+    let tipoFilter: string[] = [];
+    if (useGridTieInverter) tipoFilter = ["red_sin_baterias"];
+    else if (useOffGridInverter) tipoFilter = ["aislada"];
+    else if (useHybridInverter && needsBatteries)
+      tipoFilter = ["red_con_baterias_lv", "red_con_baterias_hv"];
+    else if (useHybridInverter && !needsBatteries)
+      tipoFilter = ["red_sin_baterias"];
+    return ALL_KITS.filter(
+      (k) =>
+        tipoFilter.includes(k.tipo_instalacion) && k.fases === inverterPhases,
+    );
+  }, [
+    useGridTieInverter,
+    useOffGridInverter,
+    useHybridInverter,
+    needsBatteries,
+    inverterPhases,
+  ]);
+
+  const handleKitSelect = useCallback(
+    (kitId: string) => {
+      if (selectedKitId === kitId) {
+        setSelectedKitId(null);
+        return;
+      }
+      const kit = ALL_KITS.find((k) => k.id === kitId);
+      if (!kit) return;
+      setSelectedKitId(kitId);
+      // Set battery voltage class from kit type
+      if (kit.tipo_instalacion === "red_con_baterias_hv") {
+        setSelectedBatteryVoltageClass("HV");
+      } else if (kit.tipo_instalacion === "red_con_baterias_lv") {
+        setSelectedBatteryVoltageClass("LV");
+      }
+      // Apply inverter
+      const invId =
+        kit.componentes.inversor_hibrido_id ??
+        kit.componentes.inversor_red_id ??
+        kit.componentes.inversor_offgrid_id;
+      if (invId) setSelectedInverterId(invId);
+      // Apply battery
+      if (kit.componentes.bateria_id) {
+        const bat = ALL_BATTERIES.find(
+          (b) => b.id === kit.componentes.bateria_id,
+        );
+        if (bat) {
+          setSelectedKwh(bat.capacidad_util_kwh);
+          setSelectedBatteryId(bat.id);
+        }
+      }
+      // Apply MPPT
+      if (kit.componentes.mppt_id) setSelectedMpptId(kit.componentes.mppt_id);
+      // Apply panel — closest Wp in catalog
+      const targetWp = kit.componentes.panel_potencia_wp;
+      const closestWp = allPanelWps.reduce((best, wp) =>
+        Math.abs(wp - targetWp) < Math.abs(best - targetWp) ? wp : best,
+      );
+      setSelectedWp(closestWp);
+    },
+    [selectedKitId, allPanelWps],
   );
 
   // Default inverter: smallest one that covers minInverterKW
@@ -921,10 +1090,250 @@ const Phase4ComponentSelection: React.FC<Props> = ({
   const numPanels =
     selectedHybrid && stringCfg ? stringCfg.totalPanels : formulaPanels;
 
-  const numBatteries =
-    needsBatteries && selectedBattery
-      ? Math.ceil(batteryCapNeeded / selectedBattery.capacidad_util_kwh)
-      : 0;
+  // Calculate total batteries needed (simple calculation for kit filtering)
+  const totalBatteriesNeeded = useMemo(() => {
+    if (!needsBatteries || !selectedBattery) return 0;
+
+    const isHV = getBatteryVoltageClass(selectedBattery) === "HV";
+
+    if (isHV && selectedHybrid) {
+      const inverterVoltage = selectedHybrid.bateria_tension;
+      const batteryVoltage = selectedBattery.tension_nominal;
+      const seriesNeeded = Math.ceil(inverterVoltage / batteryVoltage);
+      const capacityPerSeriesString =
+        selectedBattery.capacidad_util_kwh * seriesNeeded;
+      const parallelNeeded = Math.ceil(
+        batteryCapNeeded / capacityPerSeriesString,
+      );
+      return seriesNeeded * parallelNeeded;
+    }
+
+    // For LV, just calculate parallel (assumes series=1)
+    const parallelNeeded = Math.ceil(batteryCapNeeded / selectedBattery.capacidad_util_kwh);
+    return parallelNeeded;
+  }, [needsBatteries, selectedBattery, selectedHybrid, batteryCapNeeded]);
+
+  // Filter available battery kits based on calculated needs
+  const availableBatteryKits = useMemo(() => {
+    if (!needsBatteries || !selectedBattery || !selectedBatteryVoltageClass || totalBatteriesNeeded === 0) {
+      return [];
+    }
+
+    const isHV = selectedBatteryVoltageClass === "HV";
+    const targetInstallationType = isHV ? "red_con_baterias_hv" : "red_con_baterias_lv";
+
+    // Filter kits that:
+    // 1. Are battery-equipped kits (not off-grid or grid-only)
+    // 2. Have the right voltage class
+    // 3. Have a matching battery model
+    // 4. Have approximately the right number of batteries (exact match or ±1)
+    return ALL_KITS.filter((kit) => {
+      const isRightType = kit.tipo_instalacion.includes("red_con_baterias");
+      if (!isRightType) return false;
+
+      const isRightVoltageClass = kit.tipo_instalacion === targetInstallationType;
+      if (!isRightVoltageClass) return false;
+
+      const hasSameBattery = kit.componentes.bateria_id === selectedBattery.id;
+      if (!hasSameBattery) return false;
+
+      // Show kits with exact match or within ±1 battery
+      const kitBatteriesQty = kit.componentes.baterias_cantidad ?? 0;
+      const isRightQuantity = Math.abs(kitBatteriesQty - totalBatteriesNeeded) <= 1;
+      if (!isRightQuantity) return false;
+
+      return true;
+    }).sort((a, b) => {
+      // Sort by proximity to needed quantity
+      const aDiff = Math.abs((a.componentes.baterias_cantidad ?? 0) - totalBatteriesNeeded);
+      const bDiff = Math.abs((b.componentes.baterias_cantidad ?? 0) - totalBatteriesNeeded);
+      return aDiff - bDiff;
+    });
+  }, [needsBatteries, selectedBattery, selectedBatteryVoltageClass, totalBatteriesNeeded]);
+
+  // Auto-select first available kit when kits are available
+  useEffect(() => {
+    if (availableBatteryKits.length > 0) {
+      if (!selectedKitId || !availableBatteryKits.find((k) => k.id === selectedKitId)) {
+        setSelectedKitId(availableBatteryKits[0].id);
+      }
+    } else {
+      setSelectedKitId("");
+    }
+  }, [availableBatteryKits, selectedKitId]);
+
+  // HV system kits — one kit per option, sorted by coverage (full-coverage first)
+  const hvSystemKits = useMemo(() => {
+    if (!needsBatteries || selectedBatteryVoltageClass !== "HV") return [];
+
+    return ALL_KITS
+      .filter(k => k.tipo_instalacion === "red_con_baterias_hv" && k.fases === inverterPhases)
+      .map(kit => {
+        const coversNeed = kit.energia_almacenada_kwh >= batteryCapNeeded;
+        const shortage = Math.max(0, batteryCapNeeded - kit.energia_almacenada_kwh);
+        const battery = ALL_BATTERIES.find(b => b.id === kit.componentes.bateria_id);
+        return { kit, coversNeed, shortage, bmsIntegrado: battery?.bms_integrado ?? true };
+      })
+      .sort((a, b) => {
+        // Full-coverage kits first (least excess first), then partial by most kWh
+        if (a.coversNeed !== b.coversNeed) return a.coversNeed ? -1 : 1;
+        if (a.coversNeed) return a.kit.energia_almacenada_kwh - b.kit.energia_almacenada_kwh;
+        return b.kit.energia_almacenada_kwh - a.kit.energia_almacenada_kwh;
+      });
+  }, [needsBatteries, selectedBatteryVoltageClass, batteryCapNeeded, inverterPhases]);
+
+  // Calculate number of batteries considering both voltage match (series) and capacity (parallel)
+  const batteryConfig = useMemo(() => {
+    if (!needsBatteries || !selectedBattery) {
+      return {
+        series: 0,
+        parallel: 0,
+        total: 0,
+        explanation: "",
+        numBMSUnits: 0,
+        bmsDistribution: [],
+        bmsInfo: "",
+      };
+    }
+
+    // For HV batteries, we need to match inverter voltage with series connection
+    const isHV = getBatteryVoltageClass(selectedBattery) === "HV";
+
+    if (isHV && selectedHybrid) {
+      const inverterVoltage = selectedHybrid.bateria_tension;
+      const batteryVoltage = selectedBattery.tension_nominal;
+      const moduleKwh = selectedBattery.capacidad_util_kwh;
+      const maxModules = selectedBattery.max_paralelo; // max modules per tower (series)
+
+      // 200V complete packs are already assembled towers — connect in PARALLEL only.
+      // Sub-200V modules (51V, 100V, 102V) are stacked in SERIES inside a tower.
+      const isCompletePack = batteryVoltage >= 200;
+
+      if (isCompletePack) {
+        // Each unit IS a complete tower with its own BMS. Connect units in parallel.
+        const unitsNeeded = Math.min(maxModules, Math.ceil(batteryCapNeeded / moduleKwh));
+        const totalCapacity = unitsNeeded * moduleKwh;
+        const towersFeasible = unitsNeeded <= 2;
+        const bmsDistribution = Array.from({ length: unitsNeeded }, (_, i) => ({
+          bmsIndex: i + 1, seriesCount: 1, parallelCount: 1,
+          totalForBMS: 1, voltage: batteryVoltage, capacity: moduleKwh,
+        }));
+        return {
+          series: 1,
+          parallel: unitsNeeded,
+          total: unitsNeeded,
+          explanation: unitsNeeded === 1
+            ? `1 unidad · ${batteryVoltage}V · ${moduleKwh.toFixed(1)} kWh (BMS integrado)`
+            : `${unitsNeeded} unidades en paralelo · ${totalCapacity.toFixed(1)} kWh total`,
+          numBMSUnits: unitsNeeded,
+          bmsDistribution,
+          bmsInfo: `${unitsNeeded} pack${unitsNeeded > 1 ? "s" : ""} ${batteryVoltage}V en paralelo · BMS integrado en cada uno`,
+          towersFeasible,
+          towersNeeded: unitsNeeded,
+        };
+      }
+
+      // --- MODULAR TOWER: modules connect in SERIES inside one tower (1 BMS per tower) ---
+      // Minimum modules to reach inverter bus voltage
+      const minSeries = Math.ceil(inverterVoltage / batteryVoltage);
+      // Ideal: fit all needed kWh into 1 tower, using up to maxModules
+      const seriesForKwh = Math.ceil(batteryCapNeeded / moduleKwh);
+      const optimalSeries = Math.min(maxModules, Math.max(minSeries, seriesForKwh));
+      const capacityOneTower = moduleKwh * optimalSeries;
+
+      if (capacityOneTower >= batteryCapNeeded) {
+        // 1 tower is enough
+        const totalCapacity = capacityOneTower;
+        return {
+          series: optimalSeries,
+          parallel: 1,
+          total: optimalSeries,
+          explanation: `1 torre · ${optimalSeries} módulo${optimalSeries > 1 ? "s" : ""} en serie · ${optimalSeries * batteryVoltage}V · ${totalCapacity.toFixed(1)} kWh`,
+          numBMSUnits: 1,
+          bmsDistribution: [{ bmsIndex: 1, seriesCount: optimalSeries, parallelCount: 1,
+            totalForBMS: optimalSeries, voltage: optimalSeries * batteryVoltage, capacity: totalCapacity }],
+          bmsInfo: `1 torre · ${optimalSeries} módulos en serie · 1 BMS`,
+          towersFeasible: true,
+          towersNeeded: 1,
+        };
+      }
+
+      // Need 2 towers (each with maxModules modules in series, connected in parallel)
+      const twoTowerCapacity = capacityOneTower * 2;
+      const towersNeeded = twoTowerCapacity >= batteryCapNeeded ? 2 : 3; // 3 = not feasible
+      const towersFeasible = towersNeeded <= 2;
+      const totalCapacity = optimalSeries * moduleKwh * towersNeeded;
+      const bmsDistribution = Array.from({ length: towersNeeded }, (_, i) => ({
+        bmsIndex: i + 1, seriesCount: optimalSeries, parallelCount: 1,
+        totalForBMS: optimalSeries, voltage: optimalSeries * batteryVoltage, capacity: capacityOneTower,
+      }));
+      return {
+        series: optimalSeries,
+        parallel: towersNeeded,
+        total: optimalSeries * towersNeeded,
+        explanation: towersFeasible
+          ? `2 torres en paralelo · ${optimalSeries} módulos/torre · ${totalCapacity.toFixed(1)} kWh total`
+          : `${towersNeeded} torres necesarias (supera el máximo recomendado de 2)`,
+        numBMSUnits: towersNeeded,
+        bmsDistribution,
+        bmsInfo: `${towersNeeded} torres · ${optimalSeries} módulos/torre · ${towersNeeded} BMS`,
+        towersFeasible,
+        towersNeeded,
+      };
+    }
+
+    // For LV batteries (48V standard), just calculate capacity
+    const parallelNeeded = Math.ceil(
+      batteryCapNeeded / selectedBattery.capacidad_util_kwh,
+    );
+
+    // Calculate number of independent BMS units needed
+    const maxParalleloPerBMS = selectedBattery.max_paralelo || 1;
+    const numBMSUnits = Math.ceil(parallelNeeded / maxParalleloPerBMS);
+
+    // Distribute batteries across BMS units (for LV, series=1)
+    const bmsDistribution = [];
+    let remainingParallel = parallelNeeded;
+    for (let i = 0; i < numBMSUnits; i++) {
+      const parallelForThisBMS = Math.min(
+        remainingParallel,
+        maxParalleloPerBMS,
+      );
+      const capacity = selectedBattery.capacidad_util_kwh * parallelForThisBMS;
+      bmsDistribution.push({
+        bmsIndex: i + 1,
+        seriesCount: 1, // LV always series 1
+        parallelCount: parallelForThisBMS,
+        totalForBMS: parallelForThisBMS,
+        voltage: selectedBattery.tension_nominal,
+        capacity,
+      });
+      remainingParallel -= parallelForThisBMS;
+    }
+
+    let bmsInfo =
+      numBMSUnits > 1
+        ? `Tu sistema necesita ${numBMSUnits} grupos de baterías, cada uno con su BMS integrado:\n`
+        : `Tu sistema requiere ${parallelNeeded} baterías en paralelo. El BMS integrado puede manejar hasta ${maxParalleloPerBMS} en paralelo.`;
+
+    bmsDistribution.forEach((dist) => {
+      if (numBMSUnits > 1) {
+        bmsInfo += `\nGrupo ${dist.bmsIndex}: ${dist.parallelCount} baterías (${dist.capacity.toFixed(1)}kWh)`;
+      }
+    });
+
+    return {
+      series: 1,
+      parallel: parallelNeeded,
+      total: parallelNeeded,
+      explanation: `${parallelNeeded} baterías en paralelo (${selectedBattery.capacidad_util_kwh}kWh × ${parallelNeeded} = ${(selectedBattery.capacidad_util_kwh * parallelNeeded).toFixed(1)}kWh)`,
+      numBMSUnits,
+      bmsDistribution,
+      bmsInfo,
+    };
+  }, [needsBatteries, selectedBattery, selectedHybrid, batteryCapNeeded]);
+
+  const numBatteries = batteryConfig.total;
 
   // Panel orientation
   const panelOrientation = useMemo(
@@ -994,6 +1403,8 @@ const Phase4ComponentSelection: React.FC<Props> = ({
         mpptId: useOffGridInverter ? selectedMpptId : null,
         numPanels,
         numBatteries: needsBatteries ? numBatteries : 0,
+        batterySeriesPerTower: needsBatteries ? batteryConfig.series : undefined,
+        batteryTowersCount: needsBatteries ? batteryConfig.parallel : undefined,
         stringConfig: stringCfg ?? undefined,
         panelOrientation,
       },
@@ -1061,45 +1472,370 @@ const Phase4ComponentSelection: React.FC<Props> = ({
 
       {/* Need summary */}
       {calcData && (
-        <div className="grid grid-cols-3 gap-2 mb-6 text-center">
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 border border-orange-200 dark:border-orange-800">
-            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-              {(requiredPowerWp / 1000).toFixed(1)} kWp
-            </div>
-            <div className="text-[10px] text-gray-500 dark:text-gray-400">
-              Potencia paneles
-            </div>
-          </div>
-          {needsBatteries && (
-            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 border border-green-200 dark:border-green-800">
-              <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                {batteryCapNeeded.toFixed(1)} kWh
+        <>
+          <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+            <div className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 border border-orange-200 dark:border-orange-800">
+              <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                {(requiredPowerWp / 1000).toFixed(1)} kWp
               </div>
               <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                Bat. necesaria
+                Potencia paneles
               </div>
             </div>
-          )}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 border border-blue-200 dark:border-blue-800">
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-              {minInverterKW.toFixed(1)} kW
-            </div>
-            <div className="text-[10px] text-gray-500 dark:text-gray-400">
-              Inv. mínimo
-            </div>
-          </div>
-          {!needsBatteries && (
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 border border-purple-200 dark:border-purple-800">
-              <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                {calcData.annualGenerationKWh.toFixed(0)}
+            {needsBatteries && (
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 border border-green-200 dark:border-green-800">
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {batteryCapNeeded.toFixed(1)} kWh
+                </div>
+                <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                  Bat. necesaria
+                </div>
+              </div>
+            )}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 border border-blue-200 dark:border-blue-800">
+              <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                {minInverterKW.toFixed(1)} kW
               </div>
               <div className="text-[10px] text-gray-500 dark:text-gray-400">
-                kWh/año est.
+                Inv. mínimo
               </div>
+            </div>
+            {!needsBatteries && (
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 border border-purple-200 dark:border-purple-800">
+                <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                  {calcData.annualGenerationKWh.toFixed(0)}
+                </div>
+                <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                  kWh/año est.
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* HV configuration summary */}
+          {needsBatteries &&
+            selectedBatteryVoltageClass === "HV" &&
+            selectedHybrid &&
+            selectedBattery && (() => {
+              const towers = batteryConfig.towersNeeded ?? batteryConfig.parallel;
+              const feasible = batteryConfig.towersFeasible ?? towers <= 2;
+              const capPerTower = (selectedBattery.capacidad_util_kwh * batteryConfig.series).toFixed(1);
+              // 200V complete packs have series=1: each unit IS a standalone pack, not a stacked tower
+              const isCompletePack = batteryConfig.series === 1;
+              const unitLabel = isCompletePack ? "Unidades" : "Torres";
+              const kwhLabel = isCompletePack ? "kWh/unidad" : "kWh/Torre";
+              const modLabel = isCompletePack ? "Mód/unid" : "Módulos/Torre";
+              return (
+                <div className={`mb-6 p-3 border rounded-xl ${feasible ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800" : "bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700"}`}>
+                  <div className="text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2 uppercase">
+                    ⚡ Configuración HV — {isCompletePack ? `Packs autónomos ${selectedBattery.tension_nominal}V` : "Sistema de Torres"}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div className="bg-white dark:bg-indigo-900/30 rounded p-2 text-center">
+                      <div className="text-[10px] text-gray-500">{modLabel}</div>
+                      <div className="font-bold text-indigo-600 dark:text-indigo-400">{batteryConfig.series}</div>
+                    </div>
+                    <div className="bg-white dark:bg-indigo-900/30 rounded p-2 text-center">
+                      <div className="text-[10px] text-gray-500">{kwhLabel}</div>
+                      <div className="font-bold text-green-600 dark:text-green-400">{capPerTower} kWh</div>
+                    </div>
+                    <div className={`rounded p-2 text-center ${towers === 1 ? "bg-green-100 dark:bg-green-900/30" : towers === 2 ? "bg-blue-100 dark:bg-blue-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+                      <div className="text-[10px] text-gray-500">{unitLabel}</div>
+                      <div className={`font-bold ${towers === 1 ? "text-green-600 dark:text-green-400" : towers === 2 ? "text-blue-600 dark:text-blue-400" : "text-amber-600 dark:text-amber-400"}`}>{towers}</div>
+                    </div>
+                  </div>
+                  {towers === 1 && (
+                    <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded text-xs text-green-700 dark:text-green-400">
+                      {isCompletePack
+                        ? `✓ 1 unidad standalone ${selectedBattery.tension_nominal}V · ${capPerTower} kWh · BMS integrado`
+                        : `✓ 1 torre/kit: ${batteryConfig.series} módulo${batteryConfig.series > 1 ? "s" : ""} en serie → ${batteryConfig.series * selectedBattery.tension_nominal}V · ${capPerTower} kWh · 1 BMS integrado`}
+                    </div>
+                  )}
+                  {towers === 2 && (
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-400">
+                      {isCompletePack
+                        ? `✓ 2 unidades ${selectedBattery.tension_nominal}V en paralelo → ${(parseFloat(capPerTower) * 2).toFixed(1)} kWh total · 2 BMS (1 por unidad)`
+                        : `✓ 2 torres idénticas en paralelo: ${batteryConfig.series} módulo${batteryConfig.series > 1 ? "s" : ""}/torre → ${(parseFloat(capPerTower) * 2).toFixed(1)} kWh total · 2 BMS`}
+                    </div>
+                  )}
+                  {!feasible && (
+                    <div className="mt-2 p-2 bg-amber-100 dark:bg-amber-900/30 rounded text-xs text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-600">
+                      {isCompletePack
+                        ? `⚠️ Se necesitan ${towers} unidades de ${capPerTower} kWh cada una. Coste elevado — considera cambiar a sistema LV (48V) o elegir un pack de mayor capacidad.`
+                        : `⚠️ Se necesitarían ${towers} torres — no recomendado. Elige una batería con mayor capacidad por módulo para resolverlo con 1 o 2 torres.`}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+        </>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* BATTERIES TYPE SELECTION (LV vs HV) */}
+      {/* ------------------------------------------------------------------ */}
+      {needsBatteries && (
+        <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-4">
+          <div className="flex items-start gap-2 mb-3">
+            <span className="text-xl">⚙️</span>
+            <div>
+              <h3 className="font-bold text-gray-800 dark:text-white text-base">
+                Tipo de Sistema de Baterías
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Elige el tipo de tensión — determinará qué baterías e inversores
+                verás disponibles
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* LV Option */}
+            <button
+              type="button"
+              onClick={() => setSelectedBatteryVoltageClass("LV")}
+              className={[
+                "text-left rounded-xl border-2 p-4 transition-all select-none",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
+                selectedBatteryVoltageClass === "LV"
+                  ? "border-green-500 bg-green-100 dark:bg-green-900/40 shadow-md"
+                  : selectedBatteryVoltageClass === "HV"
+                    ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-60"
+                    : "border-green-300 dark:border-green-700 bg-white dark:bg-gray-800 hover:border-green-400 dark:hover:border-green-600",
+              ].join(" ")}
+              aria-pressed={selectedBatteryVoltageClass === "LV"}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="font-bold text-gray-800 dark:text-white">
+                    LV — Bajo Voltaje (Estándar)
+                  </div>
+                  <div className="text-xl font-black text-green-600 dark:text-green-400">
+                    48V
+                  </div>
+                </div>
+                {selectedBatteryVoltageClass === "LV" && (
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      viewBox="0 0 12 12"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2 6l3 3 5-5"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-1 mb-3">
+                <li>✓ Más económico</li>
+                <li>✓ La opción más común</li>
+                <li>✓ Compatible con la mayoría de inversores</li>
+              </ul>
+              <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                Recomendado para la mayoría de instalaciones
+              </div>
+            </button>
+
+            {/* HV Option */}
+            <button
+              type="button"
+              onClick={() => setSelectedBatteryVoltageClass("HV")}
+              className={[
+                "text-left rounded-xl border-2 p-4 transition-all select-none",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500",
+                selectedBatteryVoltageClass === "HV"
+                  ? "border-green-500 bg-green-100 dark:bg-green-900/40 shadow-md"
+                  : selectedBatteryVoltageClass === "LV"
+                    ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-60"
+                    : "border-green-300 dark:border-green-700 bg-white dark:bg-gray-800 hover:border-green-400 dark:hover:border-green-600",
+              ].join(" ")}
+              aria-pressed={selectedBatteryVoltageClass === "HV"}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="font-bold text-gray-800 dark:text-white">
+                    HV — Alto Voltaje (Premium)
+                  </div>
+                  <div className="text-xl font-black text-green-600 dark:text-green-400">
+                    100V+
+                  </div>
+                </div>
+                {selectedBatteryVoltageClass === "HV" && (
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      viewBox="0 0 12 12"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2 6l3 3 5-5"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-1 mb-3">
+                <li>✓ Mayor potencia y capacidad</li>
+                <li>✓ Más eficiente en sistemas grandes</li>
+                <li>✓ Mejor para ampliaciones futuras</li>
+              </ul>
+              <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                Para sistemas avanzados / profesionales
+              </div>
+            </button>
+          </div>
+
+          {selectedBatteryVoltageClass && (
+            <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-700 dark:text-blue-300">
+              ℹ️{" "}
+              <strong>
+                Sistema bloqueado a {selectedBatteryVoltageClass}:
+              </strong>{" "}
+              Solo verás baterías e inversores{" "}
+              {selectedBatteryVoltageClass === "LV" ? "48V" : "100V+"}{" "}
+              compatibles. Si cambias de opinión,{" "}
+              <button
+                type="button"
+                onClick={() => setSelectedBatteryVoltageClass(null)}
+                className="font-bold underline hover:no-underline"
+              >
+                reinicia la selección
+              </button>
+              .
             </div>
           )}
         </div>
       )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* KITS RECOMENDADOS */}
+      {/* ------------------------------------------------------------------ */}
+      {(() => {
+        // HV battery kits always appear in the dedicated hvSystemKits section — never here.
+        // LV battery kits are hidden when HV is selected (incompatible).
+        const visibleKits = matchingKits.filter(k => {
+          if (k.tipo_instalacion === "red_con_baterias_hv") return false;
+          if (k.tipo_instalacion === "red_con_baterias_lv" && selectedBatteryVoltageClass === "HV") return false;
+          return true;
+        });
+        if (visibleKits.length === 0) return null;
+        return (
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">📦</span>
+            <div>
+              <h3 className="font-bold text-gray-800 dark:text-white text-base">
+                Kits recomendados
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Un kit es un <strong>paquete completo</strong> (inversor + baterías + paneles). Compras 1 kit, no varios.
+                {needsBatteries && batteryCapNeeded > 0 && ` Tu necesidad: ${batteryCapNeeded.toFixed(1)} kWh.`}
+              </p>
+            </div>
+          </div>
+          {selectedKitId && (
+            <div className="mb-3 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl px-3 py-2 text-xs text-indigo-700 dark:text-indigo-300">
+              <span className="font-bold">📦 Kit aplicado:</span>
+              <span className="flex-1">
+                {ALL_KITS.find((k) => k.id === selectedKitId)?.nombre}
+              </span>
+              <button
+                onClick={() => setSelectedKitId(null)}
+                className="ml-auto text-indigo-400 hover:text-indigo-600 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          <div className="space-y-3">
+            {visibleKits.map((kit, idx) => {
+              const isSelected = selectedKitId === kit.id;
+              const kitCoversNeed = needsBatteries && batteryCapNeeded > 0
+                ? kit.energia_almacenada_kwh >= batteryCapNeeded
+                : true;
+              const isKitRec = idx === 0 && kitCoversNeed;
+              const isKitSup = kitCoversNeed && !isKitRec;
+              const isKitInsuff = !kitCoversNeed;
+              const batQty = kit.componentes.baterias_cantidad ?? 0;
+              return (
+                <div
+                  key={kit.id}
+                  className={[
+                    "w-full rounded-xl border-2 p-3 cursor-pointer transition-all",
+                    isSelected
+                      ? isKitRec
+                        ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-md"
+                        : isKitSup
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
+                          : "border-red-400 bg-red-50 dark:bg-red-900/10 shadow-md"
+                      : isKitRec
+                        ? "border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10 hover:border-green-500"
+                        : isKitSup
+                          ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 hover:border-blue-400"
+                          : "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10 hover:border-red-400",
+                  ].join(" ")}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleKitSelect(kit.id)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleKitSelect(kit.id)
+                  }
+                  aria-pressed={isSelected}
+                >
+                  <div className="flex items-start justify-between gap-1 mb-1">
+                    <span className="font-bold text-xs text-gray-800 dark:text-white leading-tight">
+                      {kit.nombre}
+                    </span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {isKitRec && <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Recomendado</span>}
+                      {isKitSup && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Superior</span>}
+                      {isKitInsuff && <span className="bg-red-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Insuficiente</span>}
+                      {isSelected && (
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${isKitRec ? "bg-green-500" : isKitSup ? "bg-blue-500" : "bg-red-400"}`}>
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-3 leading-snug">
+                    {kit.descripcion}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 font-bold text-xs px-2 py-1 rounded-lg">
+                      ☀️ {(kit.potencia_pv_wp / 1000).toFixed(1)} kWp
+                    </span>
+                    {kit.energia_almacenada_kwh > 0 ? (
+                      <span className={`font-bold text-xs px-2 py-1 rounded-lg ${kitCoversNeed ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400" : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"}`}>
+                        🔋 {kit.energia_almacenada_kwh.toFixed(1)} kWh{batQty > 1 ? ` (${batQty} baterías)` : ""}
+                        {kitCoversNeed && needsBatteries && batteryCapNeeded > 0 && " ✓"}
+                        {!kitCoversNeed && needsBatteries && batteryCapNeeded > 0 && ` / ${batteryCapNeeded.toFixed(1)} kWh necesarios`}
+                      </span>
+                    ) : (
+                      <span className="bg-gray-100 dark:bg-gray-700 text-gray-500 text-xs px-2 py-1 rounded-lg">Sin batería · Red pura</span>
+                    )}
+                    <span className="ml-auto font-bold text-base text-indigo-600 dark:text-indigo-400">
+                      {kit.precio_total.toLocaleString("es-ES")} €
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        );
+      })()}
 
       {/* ------------------------------------------------------------------ */}
       {/* Components checklist — separados / modular */}
@@ -1223,7 +1959,6 @@ const Phase4ComponentSelection: React.FC<Props> = ({
           recommended={recommendedWp}
           formatChip={(v) => `${v} Wp`}
           onSelect={setSelectedWp}
-          accentColor="orange"
         />
 
         {/* Catalog browser: all panels at selected Wp */}
@@ -1314,9 +2049,139 @@ const Phase4ComponentSelection: React.FC<Props> = ({
       </Section>
 
       {/* ------------------------------------------------------------------ */}
+      {/* HV SYSTEM KITS — shown when HV is selected, before battery picker  */}
+      {/* ------------------------------------------------------------------ */}
+      {needsBatteries && selectedBatteryVoltageClass === "HV" && hvSystemKits.length > 0 && (
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">📦</span>
+            <div>
+              <h3 className="font-bold text-gray-800 dark:text-white text-base">
+                Kits HV recomendados
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Un kit HV es una unidad completa con sus módulos internos — no son unidades separadas. Elige el que mejor se adapte a tu necesidad de{" "}
+                <strong>{batteryCapNeeded.toFixed(1)} kWh</strong>.
+              </p>
+            </div>
+          </div>
+          <div className="p-3 mb-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs text-indigo-700 dark:text-indigo-300">
+            ℹ️ Cada kit es una <strong>solución completa</strong>: inversor + baterías + paneles ya dimensionados. <strong>Compras 1 kit</strong>, no varios. Las baterías HV llevan el BMS integrado — no hace falta comprarlo por separado.
+          </div>
+          <div className="space-y-3">
+            {hvSystemKits.map(({ kit, coversNeed, shortage, bmsIntegrado }, idx) => {
+              const isSelected = selectedKitId === kit.id;
+              const isRecommended = idx === 0 && coversNeed;
+              const isSuperiorKit = coversNeed && !isRecommended;
+              const isInsuffKit = !coversNeed;
+              const batQty = kit.componentes.baterias_cantidad ?? 1;
+              return (
+                <div
+                  key={kit.id}
+                  className={[
+                    "w-full rounded-xl border-2 p-3 cursor-pointer transition-all",
+                    isSelected
+                      ? isRecommended
+                        ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-md"
+                        : isSuperiorKit
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
+                          : "border-red-400 bg-red-50 dark:bg-red-900/10 shadow-md"
+                      : isRecommended
+                        ? "border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/10 hover:border-green-500"
+                        : isSuperiorKit
+                          ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 hover:border-blue-400"
+                          : "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10 hover:border-red-400",
+                  ].join(" ")}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleKitSelect(kit.id)}
+                  onKeyDown={(e) => e.key === "Enter" && handleKitSelect(kit.id)}
+                  aria-pressed={isSelected}
+                >
+                  <div className="flex items-start justify-between gap-1 mb-2">
+                    <span className="font-bold text-xs text-gray-800 dark:text-white leading-tight flex-1">
+                      {kit.nombre}
+                    </span>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      {isSelected && (
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${isRecommended ? "bg-green-500" : isSuperiorKit ? "bg-blue-500" : "bg-red-400"}`}>
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                          </svg>
+                        </div>
+                      )}
+                      {isRecommended && <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Recomendado</span>}
+                      {isSuperiorKit && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Superior</span>}
+                      {isInsuffKit && <span className="bg-red-400 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Insuficiente</span>}
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-3 leading-snug">
+                    {kit.descripcion}
+                  </p>
+
+                  {/* Coverage + specs row */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <span className="bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 font-bold text-xs px-2 py-1 rounded-lg">
+                      ☀️ {(kit.potencia_pv_wp / 1000).toFixed(1)} kWp
+                    </span>
+                    <span className={`font-bold text-xs px-2 py-1 rounded-lg ${coversNeed ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400" : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"}`}>
+                      🔋 {kit.energia_almacenada_kwh} kWh{batQty > 1 ? ` (${batQty} baterías)` : ""}
+                      {coversNeed ? " ✓" : ` / ${batteryCapNeeded.toFixed(1)} kWh necesarios`}
+                    </span>
+                    {bmsIntegrado && (
+                      <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">✓ BMS incluido</span>
+                    )}
+                    <span className="ml-auto font-bold text-base text-indigo-600 dark:text-indigo-400">
+                      {kit.precio_total.toLocaleString("es-ES")} €
+                    </span>
+                  </div>
+                  {!coversNeed && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-500">
+                      ⚠ Faltan {shortage.toFixed(1)} kWh — puedes añadir baterías adicionales compatibles
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {selectedKitId && hvSystemKits.some(({ kit }) => kit.id === selectedKitId) && (
+            <div className="mt-2 flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl px-3 py-2 text-xs text-indigo-700 dark:text-indigo-300">
+              <span className="font-bold">📦 Kit aplicado:</span>
+              <span className="flex-1">{ALL_KITS.find((k) => k.id === selectedKitId)?.nombre}</span>
+              <button onClick={() => setSelectedKitId(null)} className="ml-auto text-indigo-400 hover:text-indigo-600 font-bold">✕</button>
+            </div>
+          )}
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2">
+            Puedes ajustar la selección manual de batería e inversor en las secciones siguientes.
+          </p>
+        </section>
+      )}
+
+      {/* Show prompt if batteries needed but type not selected */}
+      {needsBatteries && !selectedBatteryVoltageClass && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl flex-shrink-0">👆</span>
+            <div>
+              <p className="font-bold text-amber-900 dark:text-amber-100 mb-1">
+                Primero: selecciona el tipo de sistema
+              </p>
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Para continuar, elige si prefieres un sistema{" "}
+                <strong>LV (48V, estándar)</strong> o{" "}
+                <strong>HV (100V+, premium)</strong> en la sección anterior.
+                Esto filtrará automáticamente todas las opciones compatibles.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
       {/* BATTERIES */}
       {/* ------------------------------------------------------------------ */}
-      {needsBatteries && (
+      {needsBatteries && selectedBatteryVoltageClass && (
         <Section
           icon="🔋"
           title="Baterías LiFePO4"
@@ -1327,14 +2192,90 @@ const Phase4ComponentSelection: React.FC<Props> = ({
             values={allBatteryKwh}
             selected={selectedKwh}
             recommended={recommendedKwh}
-            warnBelow={recommendedKwh}
             formatChip={(v) => `${v} kWh`}
             onSelect={setSelectedKwh}
-            accentColor="green"
           />
           {selectedKwh < recommendedKwh && (
             <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-xl text-xs text-red-700 dark:text-red-300">
-              ⚠️ <strong>Capacidad insuficiente:</strong> has elegido {selectedKwh} kWh útiles pero tu consumo requiere {batteryCapNeeded.toFixed(1)} kWh. Con esta batería necesitarás {Math.ceil(batteryCapNeeded / selectedKwh)} unidades y puede que no cubra toda la noche.
+              ⚠️ <strong>Capacidad insuficiente:</strong> has elegido{" "}
+              {selectedKwh} kWh útiles pero tu consumo requiere{" "}
+              {batteryCapNeeded.toFixed(1)} kWh. Con esta batería necesitarás{" "}
+              {Math.ceil(batteryCapNeeded / selectedKwh)} unidades y puede que
+              no cubra toda la noche.
+            </div>
+          )}
+
+          {/* Show available battery kits based on calculated needs */}
+          {availableBatteryKits.length > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide mb-3">
+                📦 Kits de baterías disponibles
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {availableBatteryKits.map((kit) => {
+                  const isSelected = kit.id === selectedKitId;
+                  const isReccommended = kit.id === availableBatteryKits[0].id;
+                  const kitBatQty = kit.componentes.baterias_cantidad ?? 1;
+                  const numKitsNeeded = Math.max(1, Math.ceil(totalBatteriesNeeded / kitBatQty));
+                  const kitTotalPrice = numKitsNeeded * kit.precio_total;
+                  return (
+                    <button
+                      key={kit.id}
+                      type="button"
+                      onClick={() => setSelectedKitId(kit.id)}
+                      className={[
+                        "relative flex-shrink-0 w-52 text-left p-2.5 rounded-xl border-2 text-xs transition-all",
+                        isSelected
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300",
+                      ].join(" ")}
+                    >
+                      {isReccommended && !isSelected && (
+                        <span className="absolute -top-2 -right-1.5 bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          Recomendado
+                        </span>
+                      )}
+                      {isSelected && (
+                        <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                          <svg
+                            className="w-2.5 h-2.5 text-white"
+                            fill="none"
+                            viewBox="0 0 12 12"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2 6l3 3 5-5"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="font-semibold text-gray-700 dark:text-gray-200 leading-tight mb-1 pr-2 pl-5 text-[10px]">
+                        {kit.nombre.replace(/Kit\s+/i, "").replace(/\s+con\s+.*/, "")}
+                      </div>
+                      <div className="text-gray-600 dark:text-gray-400 text-[10px] pl-5">
+                        {numKitsNeeded === 1
+                          ? `1 kit · ${kitBatQty} batería${kitBatQty > 1 ? "s" : ""} · ${kit.energia_almacenada_kwh.toFixed(1)} kWh`
+                          : `${numKitsNeeded} kits · ${kitBatQty * numKitsNeeded} baterías · ${(kit.energia_almacenada_kwh * numKitsNeeded).toFixed(1)} kWh`}
+                      </div>
+                      <div className="text-blue-600 dark:text-blue-400 text-[10px] pl-5 font-semibold">
+                        {numKitsNeeded > 1 && <span className="text-gray-400 font-normal">{numKitsNeeded} × {kit.precio_total.toLocaleString("es-ES")} € = </span>}
+                        {kitTotalPrice.toLocaleString("es-ES")} €
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {batteriesAtKwh.length === 0 && selectedBatteryVoltageClass && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl text-xs text-amber-700 dark:text-amber-300 mb-3">
+              ⚠️ <strong>Sin baterías disponibles</strong> en{" "}
+              {selectedBatteryVoltageClass === "LV" ? "48V" : "100V+"} a{" "}
+              {selectedKwh} kWh. Intenta otra capacidad.
             </div>
           )}
 
@@ -1400,46 +2341,131 @@ const Phase4ComponentSelection: React.FC<Props> = ({
           )}
 
           {selectedBattery && (
-            <DetailCard
-              icon="🔋"
-              title={selectedBattery.nombre}
-              badge={`×${numBatteries} uds. · ${(numBatteries * selectedBattery.capacidad_util_kwh).toFixed(1)} kWh útiles`}
-              accent="green"
-              rows={[
-                {
-                  label: "Tensión",
-                  value: `${selectedBattery.tension_nominal} V`,
-                },
-                {
-                  label: "Ciclos (80% DoD)",
-                  value: selectedBattery.ciclos_vida_80dod.toLocaleString(),
-                },
-                {
-                  label: "Eficiencia",
-                  value: `${selectedBattery.eficiencia_carga_descarga}%`,
-                },
-                {
-                  label: "Garantía",
-                  value: `${selectedBattery.garantia} años`,
-                },
-                {
-                  label: "BMS integrado",
-                  value: selectedBattery.bms_integrado ? "Sí" : "No",
-                },
-                {
-                  label: "Paralelo máx.",
-                  value: `${selectedBattery.max_paralelo} uds.`,
-                },
-              ]}
-            />
+            <>
+              <DetailCard
+                icon="🔋"
+                title={selectedBattery.nombre}
+                badge={
+                  selectedBatteryVoltageClass === "HV"
+                    ? batteryConfig.parallel === 1
+                      ? `1 torre · ${batteryConfig.series} mód. en serie · ${(selectedBattery.capacidad_util_kwh * batteryConfig.series).toFixed(1)} kWh`
+                      : `${batteryConfig.parallel} torres · ${numBatteries} mód. totales · ${(selectedBattery.capacidad_util_kwh * numBatteries).toFixed(1)} kWh`
+                    : `×${numBatteries} uds. · ${(numBatteries * selectedBattery.capacidad_util_kwh).toFixed(1)} kWh`
+                }
+                accent="green"
+                rows={[
+                  {
+                    label: "Tipo",
+                    value: getBatteryVoltageLabel(selectedBattery),
+                  },
+                  {
+                    label: "Tensión unitaria",
+                    value: `${selectedBattery.tension_nominal} V`,
+                  },
+                  ...(selectedBatteryVoltageClass === "HV" && selectedHybrid
+                    ? [
+                        {
+                          label: "Módulos/torre (serie)",
+                          value: `${batteryConfig.series} → ${selectedBattery.tension_nominal * batteryConfig.series}V`,
+                        },
+                        {
+                          label: "Torres en paralelo",
+                          value: `${batteryConfig.parallel} torre${batteryConfig.parallel > 1 ? "s" : ""} · ${(selectedBattery.capacidad_util_kwh * numBatteries).toFixed(1)} kWh`,
+                        },
+                      ]
+                    : []),
+                  {
+                    label: "Ciclos (80% DoD)",
+                    value: selectedBattery.ciclos_vida_80dod.toLocaleString(),
+                  },
+                  {
+                    label: "Eficiencia",
+                    value: `${selectedBattery.eficiencia_carga_descarga}%`,
+                  },
+                  {
+                    label: "Garantía",
+                    value: `${selectedBattery.garantia} años`,
+                  },
+                  {
+                    label: "BMS",
+                    value: selectedBattery.bms_integrado ? "Integrado" : "Externo",
+                  },
+                  {
+                    label: selectedBatteryVoltageClass === "HV" ? "Módulos/torre máx." : "Paralelo máx.",
+                    value: `${selectedBattery.max_paralelo} uds.`,
+                  },
+                ]}
+              />
+
+              {/* HV tower configuration detail */}
+              {selectedBatteryVoltageClass === "HV" && selectedHybrid && (
+                <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-300 dark:border-indigo-700 rounded-xl text-xs text-indigo-700 dark:text-indigo-300">
+                  <div className="font-bold mb-2">🏗️ Arquitectura de torres HV</div>
+                  <div className="space-y-1.5">
+                    <div className="font-mono bg-white dark:bg-indigo-900/40 p-2 rounded text-[11px]">
+                      {batteryConfig.explanation}
+                    </div>
+                    {batteryConfig.parallel === 2 && (
+                      <div className="flex gap-2">
+                        {batteryConfig.bmsDistribution.map((dist) => (
+                          <div key={dist.bmsIndex} className="flex-1 bg-white dark:bg-indigo-900/30 rounded p-2 text-center">
+                            <div className="text-[9px] text-gray-500 mb-1">Torre {dist.bmsIndex}</div>
+                            <div className="font-bold text-indigo-600 dark:text-indigo-400">{dist.seriesCount} mód.</div>
+                            <div className="text-[10px]">{dist.voltage}V · {dist.capacity.toFixed(1)} kWh</div>
+                            <div className="text-[9px] text-green-600 dark:text-green-400">1 BMS</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(batteryConfig.towersFeasible === false || (batteryConfig.towersNeeded ?? 0) > 2) && (
+                      <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded text-amber-700 dark:text-amber-400 font-semibold">
+                        ⚠️ {batteryConfig.parallel} torres no recomendado — elige una batería de mayor capacidad por módulo
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-xl text-xs text-green-700 dark:text-green-300">
+                ✓{" "}
+                <strong>
+                  Sistema {selectedBatteryVoltageClass === "HV" ? "HV" : "LV"}{" "}
+                  compatible:
+                </strong>{" "}
+                todos los inversores mostrados son compatibles con esta batería.
+                Solo verás opciones que funcionan bien juntas.
+              </div>
+            </>
           )}
         </Section>
       )}
 
       {/* ------------------------------------------------------------------ */}
+      {/* HV + separados incompatibility warning                             */}
+      {/* ------------------------------------------------------------------ */}
+      {hvIncompatiblePath && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl flex-shrink-0">⚠️</span>
+            <div>
+              <p className="font-bold text-red-800 dark:text-red-300 text-sm mb-1">
+                Las baterías HV no son compatibles con reguladores MPPT ni inversores off-grid
+              </p>
+              <p className="text-xs text-red-700 dark:text-red-400 mb-2">
+                Las baterías de alta tensión (100V+) trabajan a un voltaje de bus DC que los reguladores MPPT y los inversores off-grid del catálogo no soportan — están diseñados para baterías de 12/24/48V.
+              </p>
+              <p className="text-xs text-red-700 dark:text-red-400 font-semibold">
+                💡 Solución: vuelve al paso anterior y elige el tipo de sistema <strong>Híbrido</strong>. Los inversores híbridos incluyen el MPPT integrado y tienen el bus DC preparado para baterías HV.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
       {/* MPPT — separados con baterías (before batteries and off-grid inverter) */}
       {/* ------------------------------------------------------------------ */}
-      {useOffGridInverter && mpptOptions.length > 0 && (
+      {useOffGridInverter && !hvIncompatiblePath && mpptOptions.length > 0 && (
         <Section
           icon="🎛️"
           title="Regulador MPPT"
@@ -1462,6 +2488,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
                 mppt={m}
                 isSelected={selectedMpptId === m.id}
                 isRecommended={m.id === recommendedMpptId}
+                isSuperior={!insufficient && m.id !== recommendedMpptId}
                 isInsufficient={insufficient}
                 onClick={() => setSelectedMpptId(m.id)}
               />
@@ -1493,6 +2520,20 @@ const Phase4ComponentSelection: React.FC<Props> = ({
               esta función activada.
             </div>
           )}
+
+          {needsBatteries && selectedBattery && (
+            <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-700 dark:text-blue-300">
+              💡 <strong>Seleccionaste:</strong> Batería{" "}
+              {getBatteryVoltageLabel(selectedBattery)} (
+              {selectedBattery.tension_nominal}V). Se mostrarán{" "}
+              {getBatteryVoltageClass(selectedBattery) === "HV"
+                ? "inversores HV"
+                : "inversores 48V"}{" "}
+              compatible
+              {getBatteryVoltageClass(selectedBattery) === "HV" ? "s HV" : "s"}.
+            </div>
+          )}
+
           {inverterOptions.length === 0 && (
             <div className="text-sm text-amber-600 dark:text-amber-400 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
               ⚠ No hay inversores{" "}
@@ -1500,27 +2541,40 @@ const Phase4ComponentSelection: React.FC<Props> = ({
               catálogo.
             </div>
           )}
-          {(inverterOptions as InversorHibrido[]).map((inv) => {
-            const kw = inv.potencia_ac_nominal / 1000;
-            const covers = kw >= minInverterKW;
-            const isRec =
-              covers &&
-              inv.id ===
-                (inverterOptions as InversorHibrido[]).find(
-                  (i) => i.potencia_ac_nominal / 1000 >= minInverterKW,
-                )?.id;
+
+          {(() => {
+            // inverterOptions is already filtered by voltage class (LV/HV) — use directly.
+            // The old ±10V tolerance check broke modular HV batteries (51.2V module ≠ 200V bus).
+            const availableInverters = inverterOptions as InversorHibrido[];
+
             return (
-              <InverterCard
-                key={inv.id}
-                inv={inv}
-                isSelected={selectedInverterId === inv.id}
-                isRecommended={isRec}
-                isInsufficient={!covers}
-                minInverterKW={minInverterKW}
-                onClick={() => setSelectedInverterId(inv.id)}
-              />
+              <>
+                {availableInverters.map((inv) => {
+                  const kw = inv.potencia_ac_nominal / 1000;
+                  const covers = kw >= minInverterKW;
+                  const isRec =
+                    covers &&
+                    inv.id ===
+                      availableInverters.find(
+                        (i) => i.potencia_ac_nominal / 1000 >= minInverterKW,
+                      )?.id;
+                  return (
+                    <InverterCard
+                      key={inv.id}
+                      inv={inv}
+                      isSelected={selectedInverterId === inv.id}
+                      isRecommended={isRec}
+                      isSuperior={covers && !isRec}
+                      isInsufficient={!covers}
+                      minInverterKW={minInverterKW}
+                      onClick={() => setSelectedInverterId(inv.id)}
+                    />
+                  );
+                })}
+              </>
             );
-          })}
+          })()}
+
           {selectedPanel && selectedHybrid && (
             <div className="mt-2">
               <button
@@ -1624,6 +2678,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
                 inv={inv}
                 isSelected={selectedInverterId === inv.id}
                 isRecommended={isRec}
+                isSuperior={covers && !isRec}
                 isInsufficient={!covers}
                 minInverterKW={minInverterKW}
                 onClick={() => setSelectedInverterId(inv.id)}
@@ -1634,9 +2689,9 @@ const Phase4ComponentSelection: React.FC<Props> = ({
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* INVERTER — off-grid (separados con baterías) */}
+      {/* INVERTER — off-grid (separados con baterías, LV only) */}
       {/* ------------------------------------------------------------------ */}
-      {useOffGridInverter && (
+      {useOffGridInverter && !hvIncompatiblePath && (
         <Section
           icon="⚡"
           title="Inversor"
@@ -1662,6 +2717,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
                 inv={inv}
                 isSelected={selectedInverterId === inv.id}
                 isRecommended={isRec}
+                isSuperior={covers && !isRec}
                 isInsufficient={!covers}
                 minInverterKW={minInverterKW}
                 onClick={() => setSelectedInverterId(inv.id)}

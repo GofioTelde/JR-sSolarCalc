@@ -1,0 +1,208 @@
+[
+  {
+    "id": "kit_red_3kw_mono",
+    "nombre": "Kit Autoconsumo 3kW Monofásico",
+    "tipo_instalacion": "red_sin_baterias",
+    "fases": 1,
+    "potencia_pv_wp": 3240,
+    "energia_almacenada_kwh": 0,
+    "descripcion": "Kit básico de autoconsumo conectado a red sin almacenamiento. Ideal para reducir la factura eléctrica durante el día.",
+    "componentes": {
+      "inversor_red_id": "red_3000w_1f",
+      "paneles_cantidad": 8,
+      "panel_potencia_wp": 405
+    },
+    "precio_total": 1580,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [5, 12]
+  },
+  {
+    "id": "kit_red_5kw_mono",
+    "nombre": "Kit Autoconsumo 5kW Monofásico",
+    "tipo_instalacion": "red_sin_baterias",
+    "fases": 1,
+    "potencia_pv_wp": 5400,
+    "energia_almacenada_kwh": 0,
+    "descripcion": "Kit de autoconsumo de tamaño medio conectado a red. Recomendado para hogares con consumo diurno elevado.",
+    "componentes": {
+      "inversor_red_id": "red_5000w_1f",
+      "paneles_cantidad": 12,
+      "panel_potencia_wp": 450
+    },
+    "precio_total": 2600,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [10, 22]
+  },
+  {
+    "id": "kit_red_10kw_tri",
+    "nombre": "Kit Autoconsumo 10kW Trifásico",
+    "tipo_instalacion": "red_sin_baterias",
+    "fases": 3,
+    "potencia_pv_wp": 10800,
+    "energia_almacenada_kwh": 0,
+    "descripcion": "Kit de autoconsumo trifásico para grandes viviendas o pequeños negocios conectados a red.",
+    "componentes": {
+      "inversor_red_id": "red_10000w_3f",
+      "paneles_cantidad": 24,
+      "panel_potencia_wp": 450
+    },
+    "precio_total": 5200,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [20, 45]
+  },
+  {
+    "id": "kit_hibrido_3kw_5kwh_growatt",
+    "nombre": "Kit Híbrido Growatt 3kW + 5kWh LV",
+    "tipo_instalacion": "red_con_baterias_lv",
+    "fases": 1,
+    "potencia_pv_wp": 4050,
+    "energia_almacenada_kwh": 4.77,
+    "descripcion": "Kit híbrido económico con inversor Growatt y batería Pylontech US5000. Perfecto para hogares que quieren independencia energética básica.",
+    "componentes": {
+      "inversor_hibrido_id": "growatt_min4200xl_xh",
+      "bateria_id": "pylontech_us5000",
+      "baterias_cantidad": 1,
+      "paneles_cantidad": 10,
+      "panel_potencia_wp": 405
+    },
+    "precio_total": 4270,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [8, 18]
+  },
+  {
+    "id": "kit_hibrido_6kw_10kwh_deye",
+    "nombre": "Kit Híbrido Deye 6kW + 10kWh LV",
+    "tipo_instalacion": "red_con_baterias_lv",
+    "fases": 1,
+    "potencia_pv_wp": 6480,
+    "energia_almacenada_kwh": 9.54,
+    "descripcion": "Kit híbrido con inversor Deye y 2 baterías Pylontech US5000. Solución popular para familias con consumo medio-alto y objetivo de máxima autonomía.",
+    "componentes": {
+      "inversor_hibrido_id": "deye_sun6k_sg05lp1",
+      "bateria_id": "pylontech_us5000",
+      "baterias_cantidad": 2,
+      "paneles_cantidad": 16,
+      "panel_potencia_wp": 405
+    },
+    "precio_total": 8650,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [15, 30]
+  },
+  {
+    "id": "kit_hibrido_6kw_10kwh_fronius_hv",
+    "nombre": "Kit Premium Fronius 6kW + 10kWh HV",
+    "tipo_instalacion": "red_con_baterias_hv",
+    "fases": 1,
+    "potencia_pv_wp": 7200,
+    "energia_almacenada_kwh": 10.2,
+    "descripcion": "Kit híbrido premium con inversor Fronius GEN24 y batería Growatt ARK XH HV. Máxima eficiencia y compatibilidad con la red inteligente.",
+    "componentes": {
+      "inversor_hibrido_id": "fronius_primo_gen24_60_plus",
+      "bateria_id": "growatt_ark_xh_102",
+      "baterias_cantidad": 1,
+      "paneles_cantidad": 16,
+      "panel_potencia_wp": 450
+    },
+    "precio_total": 12000,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [15, 30]
+  },
+  {
+    "id": "kit_hibrido_5kw_10kwh_growatt_3f",
+    "nombre": "Kit Híbrido Trifásico Growatt 5kW + 10kWh LV",
+    "tipo_instalacion": "red_con_baterias_lv",
+    "fases": 3,
+    "potencia_pv_wp": 5400,
+    "energia_almacenada_kwh": 9.54,
+    "descripcion": "Kit híbrido trifásico económico con inversor Growatt y 2 baterías Pylontech. Solución ideal para viviendas con suministro trifásico.",
+    "componentes": {
+      "inversor_hibrido_id": "growatt_mod5000tl3_xh",
+      "bateria_id": "pylontech_us5000",
+      "baterias_cantidad": 2,
+      "paneles_cantidad": 12,
+      "panel_potencia_wp": 450
+    },
+    "precio_total": 7600,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [15, 30]
+  },
+  {
+    "id": "kit_hibrido_10kw_15kwh_foxess_hv",
+    "nombre": "Kit Híbrido Premium FOX-ESS 10kW + 11.5kWh HV",
+    "tipo_instalacion": "red_con_baterias_hv",
+    "fases": 3,
+    "potencia_pv_wp": 9000,
+    "energia_almacenada_kwh": 11.52,
+    "descripcion": "Kit híbrido trifásico premium con inversor FOX-ESS H3 y batería HV de alta capacidad. Para instalaciones de alta demanda que requieren máxima autonomía.",
+    "componentes": {
+      "inversor_hibrido_id": "foxess_h3_50k_e",
+      "bateria_id": "foxess_ep12_hv",
+      "baterias_cantidad": 1,
+      "paneles_cantidad": 20,
+      "panel_potencia_wp": 450
+    },
+    "precio_total": 16000,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [25, 50]
+  },
+  {
+    "id": "kit_aislada_3kw_10kwh_victron",
+    "nombre": "Kit Aislada Victron 3kW + 10kWh",
+    "tipo_instalacion": "aislada",
+    "fases": 1,
+    "potencia_pv_wp": 3240,
+    "energia_almacenada_kwh": 9.54,
+    "descripcion": "Kit para instalación aislada de la red con inversor/cargador Victron MultiPlus-II, controlador MPPT Victron y baterías LiFePO4. Fiable y monitorizable.",
+    "componentes": {
+      "inversor_offgrid_id": "victron_multiplus2_48_3000",
+      "mppt_id": "victron_smartsolar_15060",
+      "bateria_id": "pylontech_us5000",
+      "baterias_cantidad": 2,
+      "paneles_cantidad": 8,
+      "panel_potencia_wp": 405
+    },
+    "precio_total": 8500,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [5, 15]
+  },
+  {
+    "id": "kit_aislada_5kw_15kwh_victron",
+    "nombre": "Kit Aislada Victron 5kW + 15kWh",
+    "tipo_instalacion": "aislada",
+    "fases": 1,
+    "potencia_pv_wp": 6000,
+    "energia_almacenada_kwh": 14.31,
+    "descripcion": "Kit completo para vivienda aislada con inversor Victron Quattro 5kW, MPPT SmartSolar y 3 baterías Pylontech US5000. Autonomía total para consumo medio.",
+    "componentes": {
+      "inversor_offgrid_id": "victron_quattro_48_5000",
+      "mppt_id": "victron_smartsolar_15085",
+      "bateria_id": "pylontech_us5000",
+      "baterias_cantidad": 3,
+      "paneles_cantidad": 14,
+      "panel_potencia_wp": 430
+    },
+    "precio_total": 13500,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [10, 25]
+  },
+  {
+    "id": "kit_aislada_10kw_20kwh_victron",
+    "nombre": "Kit Aislada Victron 10kW + 20kWh",
+    "tipo_instalacion": "aislada",
+    "fases": 1,
+    "potencia_pv_wp": 9600,
+    "energia_almacenada_kwh": 19.08,
+    "descripcion": "Kit para grandes viviendas aisladas o pequeñas granjas con inversor Victron Quattro 10kW y 4 baterías Pylontech. Ideal para cargas pesadas y consumo elevado.",
+    "componentes": {
+      "inversor_offgrid_id": "victron_quattro_48_10000",
+      "mppt_id": "victron_smartsolar_rs450_100",
+      "bateria_id": "pylontech_us5000",
+      "baterias_cantidad": 4,
+      "paneles_cantidad": 22,
+      "panel_potencia_wp": 440
+    },
+    "precio_total": 21000,
+    "precio_estimado": true,
+    "adecuado_consumo_kwh_dia": [20, 40]
+  }
+]
