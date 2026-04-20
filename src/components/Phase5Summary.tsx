@@ -497,7 +497,7 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
 
           {/* Panel */}
           {panel && selectedComponents && (
-            <div className="flex items-start gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800">
+            <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
               <span className="text-2xl flex-shrink-0">🔆</span>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-gray-800 dark:text-white text-sm truncate">{panel.nombre}</div>
@@ -512,7 +512,7 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
                 </div>
               </div>
               <div className="flex-shrink-0 text-right">
-                <div className="text-xl font-bold text-orange-600 dark:text-orange-400">×{selectedComponents.numPanels}</div>
+                <div className="text-xl font-bold text-green-600 dark:text-green-400">×{selectedComponents.numPanels}</div>
                 <div className="text-[10px] text-gray-400">unidades</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   {((panel.superficie_m2 as number) * selectedComponents.numPanels).toFixed(1)} m²
@@ -522,28 +522,37 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
           )}
 
           {/* Battery */}
-          {needsBatteries && battery && selectedComponents && (
-            <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
-              <span className="text-2xl flex-shrink-0">🔋</span>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-800 dark:text-white text-sm truncate">{battery.nombre}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {battery.capacidad_util_kwh as number} kWh útiles · {battery.tension_nominal as number} V
+          {needsBatteries && battery && selectedComponents && (() => {
+            const isModularTow = (battery.tipo as string) === "lifepo4_hv" && (battery.tension_nominal as number) < 200;
+            const towers = selectedComponents.batteryTowersCount ?? 1;
+            const totalMods = selectedComponents.numBatteries ?? 1;
+            const kwh_ud = battery.capacidad_util_kwh as number;
+            const totalKwh = (kwh_ud * totalMods).toFixed(1);
+            const unitLabel = isModularTow ? `${totalMods} mód.` : `×${totalMods}`;
+            const subLabel = isModularTow ? `${towers} BMS · ${totalKwh} kWh` : "unidades";
+            return (
+              <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <span className="text-2xl flex-shrink-0">🔋</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-800 dark:text-white text-sm truncate">{battery.nombre}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {kwh_ud} kWh útiles · {battery.tension_nominal as number} V
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {(battery.ciclos_vida_80dod as number).toLocaleString()} ciclos · {battery.eficiencia_carga_descarga as number}% efic.
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Garantía: {battery.garantia as number} años</div>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {(battery.ciclos_vida_80dod as number).toLocaleString()} ciclos · {battery.eficiencia_carga_descarga as number}% efic.
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-xl font-bold text-green-600 dark:text-green-400">{unitLabel}</div>
+                  <div className="text-[10px] text-gray-400">{subLabel}</div>
+                  {!isModularTow && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{totalKwh} kWh útiles</div>
+                  )}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Garantía: {battery.garantia as number} años</div>
               </div>
-              <div className="flex-shrink-0 text-right">
-                <div className="text-xl font-bold text-green-600 dark:text-green-400">×{selectedComponents.numBatteries}</div>
-                <div className="text-[10px] text-gray-400">unidades</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {((battery.capacidad_util_kwh as number) * selectedComponents.numBatteries).toFixed(1)} kWh útiles
-                </div>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Inverter */}
           {inverter && (
@@ -672,7 +681,7 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
           <Block title="🛒 Lista de compra completa" color="purple">
             {/* Disclaimer */}
             <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl text-xs text-amber-800 dark:text-amber-300">
-              ⚠️ <strong>Precios estimados</strong> — valores orientativos de mercado (sin IVA). Los precios reales varían según proveedor, marca y fecha. Solicita presupuesto a un instalador certificado.
+              ⚠️ <strong>Precios estimados</strong> — valores orientativos de mercado (sin IVA, IGIC). Los precios reales varían según proveedor, marca y fecha. Solicita presupuesto a un instalador certificado.
             </div>
 
             {/* Main components */}
@@ -681,17 +690,19 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
               {lines.map((l, i) => (
                 <div key={i} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
                   <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 dark:text-white leading-tight">{l.label}</p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{l.explain}</p>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <p className="text-sm font-semibold text-gray-800 dark:text-white leading-tight truncate">{l.label}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 break-words">{l.explain}</p>
                     </div>
-                    <div className="flex-shrink-0 text-right">
-                      <p className="text-sm font-bold text-gray-700 dark:text-gray-200">{l.qty} {l.unit}</p>
+                    <div className="flex-shrink-0 text-right ml-2">
+                      <p className="text-sm font-bold text-gray-700 dark:text-gray-200 whitespace-nowrap">{l.qty} {l.unit}</p>
                       {l.total !== null && (
-                        <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                        <p className="text-xs text-purple-600 dark:text-purple-400 font-medium whitespace-nowrap">
                           ~{l.total.toLocaleString("es-ES")} €
-                          {l.qty > 1 && l.precioUd && <span className="text-gray-400 font-normal"> ({l.precioUd} €/ud)</span>}
                         </p>
+                      )}
+                      {l.qty > 1 && l.precioUd && (
+                        <p className="text-[10px] text-gray-400 font-normal whitespace-nowrap">({l.precioUd} €/ud)</p>
                       )}
                     </div>
                   </div>

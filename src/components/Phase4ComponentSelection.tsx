@@ -765,43 +765,91 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     });
   }, [allPanelWps, requiredPowerWp]);
 
-  // For each kWh tier, compute the minimum units needed and whether the need is covered.
-  // Uses max_paralelo of the best battery at that tier.
-  // Goal: fewer units = fewer BMS = lower total cost.
+  // For each kWh tier, compute the minimum BMS count needed and whether the need is covered.
+  // Distinguishes modular batteries (sub-200V, N modules per tower = 1 BMS) from
+  // complete packs (200V, each unit = 1 BMS).  Goal: fewer BMS = lower cost.
   const batteryTierInfo = useMemo(() => {
     const classBatteries = selectedBatteryVoltageClass
       ? ALL_BATTERIES.filter(
           (b) => getBatteryVoltageClass(b) === selectedBatteryVoltageClass,
         )
       : ALL_BATTERIES;
-    const map = new Map<number, { unitsNeeded: number; canCover: boolean; maxUnits: number }>();
+    const map = new Map<number, {
+      unitsNeeded: number;   // BMS count (NOT module count)
+      canCover: boolean;
+      maxUnits: number;
+      isModular: boolean;    // true = modular tower (sub-200V), modules stack in 1 BMS
+      modulesNeeded: number; // modules per BMS (only meaningful when isModular)
+    }>();
     for (const kwh of allBatteryKwh) {
       const atTier = classBatteries.filter((b) => b.capacidad_util_kwh === kwh);
-      const maxUnits = Math.max(...atTier.map((b) => b.max_paralelo));
-      const rawUnits = batteryCapNeeded > 0 ? Math.ceil(batteryCapNeeded / kwh) : 1;
-      const unitsNeeded = Math.min(rawUnits, maxUnits);
-      const canCover = unitsNeeded * kwh >= batteryCapNeeded;
-      map.set(kwh, { unitsNeeded, canCover, maxUnits });
+      let bestBMS = Infinity;
+      let bestCanCover = false;
+      let bestMaxUnits = 1;
+      let bestIsModular = false;
+      let bestModules = 1;
+
+      for (const bat of atTier) {
+        const isCompletePack = bat.tension_nominal >= 200;
+        if (isCompletePack) {
+          // Each physical unit = 1 independent BMS
+          const rawBMS = batteryCapNeeded > 0 ? Math.ceil(batteryCapNeeded / kwh) : 1;
+          const cappedBMS = Math.min(rawBMS, bat.max_paralelo);
+          const covers = cappedBMS * kwh >= batteryCapNeeded;
+          if (rawBMS < bestBMS || (rawBMS === bestBMS && covers && !bestCanCover)) {
+            bestBMS = cappedBMS;
+            bestCanCover = covers;
+            bestMaxUnits = bat.max_paralelo;
+            bestIsModular = false;
+            bestModules = cappedBMS;
+          }
+        } else {
+          // Modular tower: up to max_paralelo modules per tower, 1 tower = 1 BMS
+          const capPerTower = bat.max_paralelo * kwh;
+          const rawBMS = batteryCapNeeded > 0 ? Math.ceil(batteryCapNeeded / capPerTower) : 1;
+          const covers = rawBMS * capPerTower >= batteryCapNeeded;
+          const modsInFirstTower = batteryCapNeeded > 0
+            ? Math.min(Math.ceil(batteryCapNeeded / kwh / rawBMS), bat.max_paralelo)
+            : 1;
+          if (rawBMS < bestBMS || (rawBMS === bestBMS && covers && !bestCanCover)) {
+            bestBMS = rawBMS;
+            bestCanCover = covers;
+            bestMaxUnits = bat.max_paralelo;
+            bestIsModular = true;
+            bestModules = modsInFirstTower;
+          }
+        }
+      }
+
+      map.set(kwh, {
+        unitsNeeded: bestBMS === Infinity ? 1 : bestBMS,
+        canCover: bestCanCover,
+        maxUnits: bestMaxUnits,
+        isModular: bestIsModular,
+        modulesNeeded: bestModules,
+      });
     }
     return map;
   }, [allBatteryKwh, selectedBatteryVoltageClass, batteryCapNeeded]);
 
   const recommendedKwh = useMemo(() => {
     if (!needsBatteries || batteryCapNeeded === 0) return allBatteryKwh[0] ?? 0;
-    // 1. Prefer any single-unit solution (1 BMS): smallest kWh where 1 unit covers the need
-    const singleUnit = allBatteryKwh.find((k) => k >= batteryCapNeeded);
-    if (singleUnit) return singleUnit;
-    // 2. No single-unit solution — pick the tier with fewest units that can cover the need
+    // 1. Prefer any 1-BMS solution (modular tower OR single complete pack)
+    const singleBMS = allBatteryKwh.find((k) => {
+      const info = batteryTierInfo.get(k);
+      return info?.unitsNeeded === 1 && info?.canCover;
+    });
+    if (singleBMS) return singleBMS;
+    // 2. No 1-BMS option — pick fewest BMS that can fully cover the need
     const feasible = allBatteryKwh.filter((k) => batteryTierInfo.get(k)?.canCover);
     if (feasible.length > 0) {
       return feasible.reduce((best, k) => {
         const bu = batteryTierInfo.get(k)!.unitsNeeded;
         const bb = batteryTierInfo.get(best)!.unitsNeeded;
-        // Fewer units wins; tie → larger kWh (still fewer BMS proportionally)
         return bu < bb || (bu === bb && k > best) ? k : best;
       });
     }
-    // 3. No tier can fully cover (all hit max_paralelo limit) — pick largest kWh available
+    // 3. Nothing can fully cover — pick largest kWh available
     return allBatteryKwh[allBatteryKwh.length - 1] ?? 0;
   }, [allBatteryKwh, batteryTierInfo, batteryCapNeeded, needsBatteries]);
 
@@ -876,8 +924,24 @@ const Phase4ComponentSelection: React.FC<Props> = ({
   }, [selectedKwh, selectedBatteryVoltageClass]);
 
   // Explicit panel / battery selection within a tier
-  const [selectedPanelId, setSelectedPanelId] = useState<string>("");
-  const [selectedBatteryId, setSelectedBatteryId] = useState<string>("");
+  // Lazy initializers ensure the recommended items are pre-selected from the very first render.
+  const [selectedPanelId, setSelectedPanelId] = useState<string>(() => {
+    const saved = data.selectedComponents?.panelId;
+    if (saved && rawPanels.find((p) => p.id === saved)) return saved;
+    return (
+      rawPanels
+        .filter((p) => p.potencia_pmax === recommendedWp)
+        .sort((a, b) => b.eficiencia - a.eficiencia)[0]?.id ?? ""
+    );
+  });
+  const [selectedBatteryId, setSelectedBatteryId] = useState<string>(() => {
+    const saved = data.selectedComponents?.batteryId;
+    if (saved && ALL_BATTERIES.find((b) => b.id === saved)) return saved;
+    return (
+      ALL_BATTERIES.filter((b) => b.capacidad_util_kwh === recommendedKwh)
+        .sort((a, b) => b.eficiencia_carga_descarga - a.eficiencia_carga_descarga)[0]?.id ?? ""
+    );
+  });
 
   // When the Wp chip changes → auto-pick best panel in that tier
   useEffect(() => {
@@ -1046,9 +1110,14 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     [selectedKitId, allPanelWps],
   );
 
-  // Default inverter: smallest one that covers minInverterKW
-  useEffect(() => {
-    if (inverterOptions.length === 0) return;
+  // Resolved inverter: if the user hasn't explicitly picked one (or their pick is no longer
+  // in the list), fall back to the smallest inverter that covers minInverterKW.
+  // This ensures the recommended inverter is visually selected from the first render
+  // and canConfirm is true without waiting for the useEffect.
+  const resolvedInverterId = useMemo(() => {
+    if (inverterOptions.length === 0) return selectedInverterId;
+    if (selectedInverterId && inverterOptions.find((i) => i.id === selectedInverterId))
+      return selectedInverterId;
     const getKw = (i: (typeof inverterOptions)[0]) =>
       useOffGridInverter
         ? ((i as InversorOffGrid).potencia_nominal ?? 0) / 1000
@@ -1056,11 +1125,17 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     const recommended =
       inverterOptions.find((i) => getKw(i) >= minInverterKW) ??
       inverterOptions[inverterOptions.length - 1];
+    return recommended?.id ?? "";
+  }, [selectedInverterId, inverterOptions, minInverterKW, useOffGridInverter]);
+
+  // Keep selectedInverterId state in sync (for explicit user choices and saves)
+  useEffect(() => {
+    if (inverterOptions.length === 0) return;
     if (
       !selectedInverterId ||
       !inverterOptions.find((i) => i.id === selectedInverterId)
     ) {
-      setSelectedInverterId(recommended.id);
+      setSelectedInverterId(resolvedInverterId);
     }
   }, [inverterOptions, minInverterKW]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1068,9 +1143,9 @@ const Phase4ComponentSelection: React.FC<Props> = ({
   // Derived quantities
   // -------------------------------------------------------------------------
 
-  const selectedHybrid = ALL_HYBRID.find((i) => i.id === selectedInverterId);
-  const selectedOffGrid = ALL_OFFGRID.find((i) => i.id === selectedInverterId);
-  const selectedGridTie = ALL_RED.find((i) => i.id === selectedInverterId);
+  const selectedHybrid = ALL_HYBRID.find((i) => i.id === resolvedInverterId);
+  const selectedOffGrid = ALL_OFFGRID.find((i) => i.id === resolvedInverterId);
+  const selectedGridTie = ALL_RED.find((i) => i.id === resolvedInverterId);
 
   // Recommended MPPT: smallest one whose output current covers the array needs
   // Estimate: array power / battery voltage / 0.9 efficiency
@@ -1418,7 +1493,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
 
   const canConfirm =
     !!selectedPanel &&
-    !!selectedInverterId &&
+    !!resolvedInverterId &&
     (!needsBatteries || !!selectedBattery);
 
   // -------------------------------------------------------------------------
@@ -1430,7 +1505,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
       panelBottomEdgeHeightM: bottomEdgeM,
       selectedComponents: {
         panelId: selectedPanel!.id,
-        inverterId: selectedInverterId,
+        inverterId: resolvedInverterId,
         batteryId: needsBatteries ? (selectedBattery?.id ?? null) : null,
         mpptId: useOffGridInverter ? selectedMpptId : null,
         numPanels,
@@ -1451,7 +1526,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     onConfirm();
   }, [
     selectedPanel,
-    selectedInverterId,
+    resolvedInverterId,
     selectedBattery,
     selectedMpptId,
     needsBatteries,
@@ -2011,17 +2086,17 @@ const Phase4ComponentSelection: React.FC<Props> = ({
                     className={[
                       "relative flex-shrink-0 w-36 text-left p-2 rounded-xl border-2 text-xs transition-all",
                       isSelected
-                        ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
-                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-orange-300",
+                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-green-300",
                     ].join(" ")}
                   >
                     {isBest && (
-                      <span className="absolute -top-2 -right-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                      <span className="absolute -top-2 -right-1.5 bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                         Rec.
                       </span>
                     )}
                     {isSelected && (
-                      <div className="absolute top-1.5 left-1.5 w-3.5 h-3.5 rounded-full bg-orange-500 flex items-center justify-center">
+                      <div className="absolute top-1.5 left-1.5 w-3.5 h-3.5 rounded-full bg-green-500 flex items-center justify-center">
                         <svg
                           className="w-2 h-2 text-white"
                           fill="none"
@@ -2058,7 +2133,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
             icon="🔆"
             title={selectedPanel.nombre}
             badge={`×${numPanels} uds. · ${(numPanels * selectedPanel.superficie_m2).toFixed(1)} m²`}
-            accent="orange"
+            accent="green"
             rows={[
               { label: "Eficiencia", value: `${selectedPanel.eficiencia}%` },
               {
@@ -2228,11 +2303,11 @@ const Phase4ComponentSelection: React.FC<Props> = ({
               if (!needsBatteries || batteryCapNeeded === 0) return `${v} kWh`;
               const info = batteryTierInfo.get(v);
               if (!info) return `${v} kWh`;
-              const u = info.unitsNeeded;
-              const suffix = info.canCover
-                ? ` · ${u} ud${u > 1 ? "s" : ""}.`
-                : ` · max ${info.maxUnits} (insuf.)`;
-              return `${v} kWh${suffix}`;
+              if (!info.canCover) return `${v} kWh · máx ${info.maxUnits} (insuf.)`;
+              const bms = info.unitsNeeded;
+              if (info.isModular && bms === 1)
+                return `${v} kWh · ${info.modulesNeeded} mód. · 1 BMS`;
+              return `${v} kWh · ${bms} BMS`;
             }}
             onSelect={setSelectedKwh}
           />
@@ -2603,7 +2678,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
                     <InverterCard
                       key={inv.id}
                       inv={inv}
-                      isSelected={selectedInverterId === inv.id}
+                      isSelected={resolvedInverterId === inv.id}
                       isRecommended={isRec}
                       isSuperior={covers && !isRec}
                       isInsufficient={!covers}
@@ -2717,7 +2792,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
               <InverterCard
                 key={inv.id}
                 inv={inv}
-                isSelected={selectedInverterId === inv.id}
+                isSelected={resolvedInverterId === inv.id}
                 isRecommended={isRec}
                 isSuperior={covers && !isRec}
                 isInsufficient={!covers}
@@ -2756,7 +2831,7 @@ const Phase4ComponentSelection: React.FC<Props> = ({
               <InverterCard
                 key={inv.id}
                 inv={inv}
-                isSelected={selectedInverterId === inv.id}
+                isSelected={resolvedInverterId === inv.id}
                 isRecommended={isRec}
                 isSuperior={covers && !isRec}
                 isInsufficient={!covers}
