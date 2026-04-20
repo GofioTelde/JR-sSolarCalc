@@ -10,6 +10,7 @@ export interface VisitCounterData {
  * The counter is stored in the "visit_counter" table, "count_esolar" column.
  */
 export async function incrementVisitCounter(): Promise<VisitCounterData | null> {
+  if (!supabase) return null;
   try {
     // 1. Get the current count (with better error handling)
     const { data, error: fetchError } = await supabase
@@ -76,6 +77,7 @@ export async function incrementVisitCounter(): Promise<VisitCounterData | null> 
  * Gets the current visit counter value from Supabase.
  */
 export async function getVisitCounter(): Promise<number> {
+  if (!supabase) return 0;
   try {
     const { data, error } = await supabase
       .from("visit_counter")

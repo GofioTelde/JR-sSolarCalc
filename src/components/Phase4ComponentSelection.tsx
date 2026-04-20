@@ -765,13 +765,45 @@ const Phase4ComponentSelection: React.FC<Props> = ({
     });
   }, [allPanelWps, requiredPowerWp]);
 
+  // For each kWh tier, compute the minimum units needed and whether the need is covered.
+  // Uses max_paralelo of the best battery at that tier.
+  // Goal: fewer units = fewer BMS = lower total cost.
+  const batteryTierInfo = useMemo(() => {
+    const classBatteries = selectedBatteryVoltageClass
+      ? ALL_BATTERIES.filter(
+          (b) => getBatteryVoltageClass(b) === selectedBatteryVoltageClass,
+        )
+      : ALL_BATTERIES;
+    const map = new Map<number, { unitsNeeded: number; canCover: boolean; maxUnits: number }>();
+    for (const kwh of allBatteryKwh) {
+      const atTier = classBatteries.filter((b) => b.capacidad_util_kwh === kwh);
+      const maxUnits = Math.max(...atTier.map((b) => b.max_paralelo));
+      const rawUnits = batteryCapNeeded > 0 ? Math.ceil(batteryCapNeeded / kwh) : 1;
+      const unitsNeeded = Math.min(rawUnits, maxUnits);
+      const canCover = unitsNeeded * kwh >= batteryCapNeeded;
+      map.set(kwh, { unitsNeeded, canCover, maxUnits });
+    }
+    return map;
+  }, [allBatteryKwh, selectedBatteryVoltageClass, batteryCapNeeded]);
+
   const recommendedKwh = useMemo(() => {
     if (!needsBatteries || batteryCapNeeded === 0) return allBatteryKwh[0] ?? 0;
-    return (
-      allBatteryKwh.find((k) => k >= batteryCapNeeded) ??
-      allBatteryKwh[allBatteryKwh.length - 1]
-    );
-  }, [allBatteryKwh, batteryCapNeeded, needsBatteries]);
+    // 1. Prefer any single-unit solution (1 BMS): smallest kWh where 1 unit covers the need
+    const singleUnit = allBatteryKwh.find((k) => k >= batteryCapNeeded);
+    if (singleUnit) return singleUnit;
+    // 2. No single-unit solution — pick the tier with fewest units that can cover the need
+    const feasible = allBatteryKwh.filter((k) => batteryTierInfo.get(k)?.canCover);
+    if (feasible.length > 0) {
+      return feasible.reduce((best, k) => {
+        const bu = batteryTierInfo.get(k)!.unitsNeeded;
+        const bb = batteryTierInfo.get(best)!.unitsNeeded;
+        // Fewer units wins; tie → larger kWh (still fewer BMS proportionally)
+        return bu < bb || (bu === bb && k > best) ? k : best;
+      });
+    }
+    // 3. No tier can fully cover (all hit max_paralelo limit) — pick largest kWh available
+    return allBatteryKwh[allBatteryKwh.length - 1] ?? 0;
+  }, [allBatteryKwh, batteryTierInfo, batteryCapNeeded, needsBatteries]);
 
   // Selection state
   const [selectedWp, setSelectedWp] = useState<number>(() => recommendedWp);
@@ -2192,7 +2224,16 @@ const Phase4ComponentSelection: React.FC<Props> = ({
             values={allBatteryKwh}
             selected={selectedKwh}
             recommended={recommendedKwh}
-            formatChip={(v) => `${v} kWh`}
+            formatChip={(v) => {
+              if (!needsBatteries || batteryCapNeeded === 0) return `${v} kWh`;
+              const info = batteryTierInfo.get(v);
+              if (!info) return `${v} kWh`;
+              const u = info.unitsNeeded;
+              const suffix = info.canCover
+                ? ` · ${u} ud${u > 1 ? "s" : ""}.`
+                : ` · max ${info.maxUnits} (insuf.)`;
+              return `${v} kWh${suffix}`;
+            }}
             onSelect={setSelectedKwh}
           />
           {selectedKwh < recommendedKwh && (
