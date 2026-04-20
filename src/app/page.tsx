@@ -131,7 +131,9 @@ function HelpModal({ onClose }: { onClose: () => void }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">🌞 Cómo usar JR's SolarCalc</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            🌞 Cómo usar JR's SolarCalc
+          </h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -143,63 +145,83 @@ function HelpModal({ onClose }: { onClose: () => void }) {
         <div className="p-5 space-y-4 text-sm">
           {/* Intro */}
           <p className="text-gray-600 dark:text-gray-300">
-            Esta herramienta te guía paso a paso para dimensionar una instalación solar fotovoltaica. Sigue las 5 fases en orden:
+            Esta herramienta te guía paso a paso para dimensionar una
+            instalación solar fotovoltaica. Sigue las 5 fases en orden:
           </p>
 
           {/* Phases */}
-          {([
-            {
-              phase: "Fase 1 — Localización",
-              icon: "🧭",
-              color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
-              desc: "Introduce tus coordenadas o busca tu ubicación. El sistema calcula la declinación magnética local para orientar correctamente los paneles solares hacia el sur geográfico.",
-            },
-            {
-              phase: "Fase 2 — Instalación",
-              icon: "⚙️",
-              color: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
-              desc: "Define el tipo de sistema (híbrido o separados), si quieres baterías, tu consumo mensual en kWh y los días de autonomía deseados. También elige el tipo de panel (monofacial o bifacial).",
-            },
-            {
-              phase: "Fase 3 — Dimensionado",
-              icon: "📐",
-              color: "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300",
-              desc: "El sistema consulta PVGIS para obtener las Horas de Sol Pico (HSP) de tu ubicación y calcula la potencia de paneles y capacidad de baterías necesarias. Puedes ajustar las pérdidas del sistema.",
-            },
-            {
-              phase: "Fase 4 — Componentes",
-              icon: "🛒",
-              color: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300",
-              desc: "Selecciona los componentes concretos: paneles (Wp), baterías (kWh) e inversor. El sistema preselecciona la opción óptima. Puedes cambiarla libremente.",
-            },
-            {
-              phase: "Fase 5 — Resumen",
-              icon: "✅",
-              color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
-              desc: "Obtén la lista de compra completa con cantidades y precios estimados de mercado (sin IVA, IGIC). También incluye las protecciones eléctricas necesarias e instrucciones de instalación.",
-            },
-          ] as const).map(({ phase, icon, color, desc }) => (
+          {(
+            [
+              {
+                phase: "Fase 1 — Localización",
+                icon: "🧭",
+                color:
+                  "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+                desc: "Introduce tus coordenadas o busca tu ubicación. El sistema calcula la declinación magnética local para orientar correctamente los paneles solares hacia el sur geográfico.",
+              },
+              {
+                phase: "Fase 2 — Instalación",
+                icon: "⚙️",
+                color:
+                  "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+                desc: "Define el tipo de sistema (híbrido o separados), si quieres baterías, tu consumo mensual en kWh y los días de autonomía deseados. También elige el tipo de panel (monofacial o bifacial).",
+              },
+              {
+                phase: "Fase 3 — Dimensionado",
+                icon: "📐",
+                color:
+                  "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300",
+                desc: "El sistema consulta PVGIS para obtener las Horas de Sol Pico (HSP) de tu ubicación y calcula la potencia de paneles y capacidad de baterías necesarias. Puedes ajustar las pérdidas del sistema.",
+              },
+              {
+                phase: "Fase 4 — Componentes",
+                icon: "🛒",
+                color:
+                  "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300",
+                desc: "Selecciona los componentes concretos: paneles (Wp), baterías (kWh) e inversor. El sistema preselecciona la opción óptima. Puedes cambiarla libremente.",
+              },
+              {
+                phase: "Fase 5 — Resumen",
+                icon: "✅",
+                color:
+                  "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
+                desc: "Obtén la lista de compra completa con cantidades y precios estimados de mercado (sin IVA, IGIC). También incluye las protecciones eléctricas necesarias e instrucciones de instalación.",
+              },
+            ] as const
+          ).map(({ phase, icon, color, desc }) => (
             <div key={phase} className={`rounded-xl p-3 ${color}`}>
-              <p className="font-bold mb-1">{icon} {phase}</p>
+              <p className="font-bold mb-1">
+                {icon} {phase}
+              </p>
               <p className="text-xs opacity-90">{desc}</p>
             </div>
           ))}
 
           {/* Color coding */}
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-            <p className="font-bold text-gray-800 dark:text-white mb-2">🎨 Código de colores</p>
+            <p className="font-bold text-gray-800 dark:text-white mb-2">
+              🎨 Código de colores
+            </p>
             <div className="space-y-1.5 text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-green-500 flex-shrink-0" />
-                <span className="text-gray-700 dark:text-gray-300"><strong>Verde</strong> — Opción recomendada por el sistema</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  <strong>Verde</strong> — Opción recomendada por el sistema
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
-                <span className="text-gray-700 dark:text-gray-300"><strong>Azul</strong> — Superior al recomendado (más potente o más caro)</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  <strong>Azul</strong> — Superior al recomendado (más potente o
+                  más caro)
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" />
-                <span className="text-gray-700 dark:text-gray-300"><strong>Rojo</strong> — Inferior al recomendado (puede ser insuficiente)</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  <strong>Rojo</strong> — Inferior al recomendado (puede ser
+                  insuficiente)
+                </span>
               </div>
             </div>
           </div>
@@ -207,12 +229,20 @@ function HelpModal({ onClose }: { onClose: () => void }) {
           {/* Battery BMS note */}
           <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 p-3 text-xs text-amber-800 dark:text-amber-300">
             <p className="font-bold mb-1">🔋 Nota sobre baterías HV</p>
-            <p>Las baterías HV modulares (como Pylontech, BYD, Growatt ARK) agrupan varios módulos en una sola torre con un único BMS. El sistema recomienda la configuración con el menor número de BMS (menor coste). "1 BMS · 7 mód." = una sola unidad con 7 módulos internos.</p>
+            <p>
+              Las baterías HV modulares (como Pylontech, BYD, Growatt ARK)
+              agrupan varios módulos en una sola torre con un único BMS. El
+              sistema recomienda la configuración con el menor número de BMS
+              (menor coste). "1 BMS · 7 mód." = una sola unidad con 7 módulos
+              internos.
+            </p>
           </div>
 
           {/* Disclaimer */}
           <p className="text-[11px] text-gray-400 dark:text-gray-500">
-            ⚠️ Los precios son orientativos. Consulta siempre a un instalador certificado antes de realizar cualquier compra o instalación eléctrica.
+            ⚠️ Los precios son orientativos. Consulta siempre a un instalador
+            certificado antes de realizar cualquier compra o instalación
+            eléctrica.
           </p>
         </div>
       </div>
@@ -255,14 +285,14 @@ function AppContent() {
   const goTo = (phase: PhaseId) => {
     if (phase <= maxPhase) {
       setCurrentPhase(phase);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "auto" });
     }
   };
 
   const advance = (to: PhaseId) => {
     setMaxPhase((m) => (to > m ? to : m) as PhaseId);
     setCurrentPhase(to);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
 
   const handlePhase1Done = () => {
