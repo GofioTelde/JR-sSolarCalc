@@ -42,12 +42,17 @@ const Compass: React.FC<CompassProps> = ({
       : -Math.abs(declination);
 
   return (
-    <div className="relative flex justify-center items-center">
-      <div
-        className="relative mx-auto w-full max-w-md"
-        style={{ width: center * 2, height: center * 2 }}
-      >
-        <svg width={center * 2} height={center * 2} className="mx-auto">
+    <div className="flex flex-col items-center gap-1 w-full">
+      {/* Etiqueta Norte — en flujo normal, nunca se solapa */}
+      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 dark:from-yellow-600 dark:to-yellow-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+        NORTE GEOGRÁFICO (0°)
+      </div>
+
+      <div className="relative w-full max-w-[340px]">
+        <svg
+          viewBox={`0 0 ${center * 2} ${center * 2}`}
+          className="w-full h-auto"
+        >
           {/* Fondo del círculo */}
           <circle
             cx={center}
@@ -302,18 +307,11 @@ const Compass: React.FC<CompassProps> = ({
             Declinación
           </text>
         </svg>
+      </div>
 
-        {/* Indicadores de sur */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-5">
-          <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 dark:from-yellow-600 dark:to-yellow-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-            NORTE GEOGRÁFICO (0°)
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2">
-          <div className="bg-gradient-to-r from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-            SUR GEOGRÁFICO (180°)
-          </div>
-        </div>
+      {/* Etiqueta Sur — en flujo normal, nunca se solapa */}
+      <div className="bg-gradient-to-r from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+        SUR GEOGRÁFICO (180°)
       </div>
     </div>
   );
