@@ -1280,7 +1280,7 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
                     {grandTotal.toLocaleString("es-ES")} €
                   </p>
                   <p className="text-[10px] text-purple-200">
-                    Sin IVA · precios orientativos
+                    Sin IVA, Sin IGIC · precios orientativos
                   </p>
                 </div>
                 {costEst?.annualSavingsEur && costEst.annualSavingsEur > 0 && (
