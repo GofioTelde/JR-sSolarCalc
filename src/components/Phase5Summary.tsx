@@ -1284,23 +1284,21 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
                   </p>
                 </div>
                 {costEst?.annualSavingsEur && costEst.annualSavingsEur > 0 && (
-                  <div className="mt-3 pt-3 border-t border-purple-500 flex justify-between gap-2 text-sm">
-                    <span className="text-purple-200 flex-1">
-                      Ahorro est. anual
-                    </span>
-                    <span className="font-semibold flex-shrink-0 whitespace-nowrap">
+                  <div className="mt-3 pt-3 border-t border-purple-500 text-sm">
+                    <p className="text-purple-200 mb-1">Ahorro est. anual</p>
+                    <p className="font-semibold">
                       {costEst.annualSavingsEur.toLocaleString("es-ES")} €/año
-                    </span>
+                    </p>
                   </div>
                 )}
                 {costEst?.paybackYears && costEst.paybackYears > 0 && (
-                  <div className="flex justify-between gap-2 text-sm mt-1">
-                    <span className="text-purple-200 flex-1">
+                  <div className="text-sm mt-3">
+                    <p className="text-purple-200 mb-1">
                       Amortización estimada
-                    </span>
-                    <span className="font-semibold flex-shrink-0 whitespace-nowrap">
+                    </p>
+                    <p className="font-semibold">
                       ~{costEst.paybackYears} años
-                    </span>
+                    </p>
                   </div>
                 )}
               </div>
