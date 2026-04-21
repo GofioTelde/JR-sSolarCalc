@@ -273,7 +273,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-start py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
       <span className="text-gray-500 dark:text-gray-400 text-sm">{label}</span>
-      <span className="font-medium text-gray-800 dark:text-white text-sm text-right max-w-[55%]">{value}</span>
+      <span className="font-medium text-gray-800 dark:text-white text-sm text-right max-w-[55%] break-words">{value}</span>
     </div>
   );
 }
@@ -432,27 +432,27 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
       {/* ------------------------------------------------------------------ */}
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3 text-center">
-          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+          <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400">
             {selectedComponents?.numPanels ?? solarCalc?.numPanels ?? "—"}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Paneles</div>
         </div>
         {needsBatteries && (
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-center">
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
               {selectedComponents?.numBatteries ?? "—"}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Baterías</div>
           </div>
         )}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-center">
-          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
             {solarCalc?.hsp ?? "—"}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">HSP h/día</div>
         </div>
         <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-3 text-center">
-          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+          <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">
             {solarCalc ? solarCalc.annualGenerationKWh.toFixed(0) : "—"}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">kWh/año est.</div>
@@ -756,19 +756,19 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
             {/* Structure + labor */}
             <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Otros costes</p>
             <div className="space-y-1 mb-4">
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-700 text-xs">
-                <div>
+              <div className="flex justify-between gap-2 py-1.5 border-b border-gray-100 dark:border-gray-700 text-xs">
+                <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-700 dark:text-gray-300">Estructura de soporte</p>
                   <p className="text-[10px] text-gray-400">Raíles, tornillería y anclajes para fijar los paneles al tejado o suelo</p>
                 </div>
-                <p className="text-purple-600 dark:text-purple-400 font-medium">~{estructuraCost.toLocaleString("es-ES")} €</p>
+                <p className="text-purple-600 dark:text-purple-400 font-medium flex-shrink-0 whitespace-nowrap">~{estructuraCost.toLocaleString("es-ES")} €</p>
               </div>
-              <div className="flex justify-between py-1.5 text-xs">
-                <div>
+              <div className="flex justify-between gap-2 py-1.5 text-xs">
+                <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-700 dark:text-gray-300">Mano de obra instalación</p>
                   <p className="text-[10px] text-gray-400">Instalador certificado (obligatorio para legalización)</p>
                 </div>
-                <p className="text-purple-600 dark:text-purple-400 font-medium">~{manoCost.toLocaleString("es-ES")} €</p>
+                <p className="text-purple-600 dark:text-purple-400 font-medium flex-shrink-0 whitespace-nowrap">~{manoCost.toLocaleString("es-ES")} €</p>
               </div>
             </div>
 

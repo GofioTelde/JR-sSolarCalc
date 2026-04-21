@@ -187,15 +187,15 @@ function DetailCard({
 
   return (
     <div className={`rounded-xl border-2 ${cls.border} ${cls.bg} p-3`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{icon}</span>
-          <span className="font-semibold text-gray-800 dark:text-white text-sm leading-snug">
+      <div className="flex flex-wrap items-center justify-between mb-2 gap-x-2 gap-y-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-lg flex-shrink-0">{icon}</span>
+          <span className="font-semibold text-gray-800 dark:text-white text-sm leading-snug break-words">
             {title}
           </span>
         </div>
         <span
-          className={`text-xs font-bold px-2 py-0.5 rounded-full ${cls.badge}`}
+          className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${cls.badge}`}
         >
           {badge}
         </span>
@@ -3099,11 +3099,11 @@ const Phase4ComponentSelection: React.FC<Props> = ({
                 {costEst.inverterCostEur.toLocaleString("es-ES")} €
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between gap-2">
+              <span className="text-gray-500 dark:text-gray-400 flex-1 min-w-0">
                 Cables, soportes, protecciones (~18%)
               </span>
-              <span className="font-medium text-gray-800 dark:text-white">
+              <span className="font-medium text-gray-800 dark:text-white flex-shrink-0">
                 {costEst.othersCostEur.toLocaleString("es-ES")} €
               </span>
             </div>

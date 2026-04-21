@@ -42,12 +42,12 @@ function KpiCard({
   }[color];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{label}</div>
-      <div className={`text-xl font-bold ${textCls} leading-tight`}>
-        {value}
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 min-w-0 overflow-hidden">
+      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 leading-tight break-words">{label}</div>
+      <div className="leading-tight">
+        <span className={`text-xl font-bold ${textCls}`}>{value}</span>
         {unit && (
-          <span className="text-xs font-normal text-gray-500 ml-1">{unit}</span>
+          <div className="text-xs font-normal text-gray-500 mt-0.5">{unit}</div>
         )}
       </div>
     </div>
@@ -297,7 +297,7 @@ const Phase3Dimensioning: React.FC<Props> = ({ onConfirm }) => {
   // Render
   // -------------------------------------------------------------------------
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-3 sm:p-6">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-full px-6 py-2 mb-4">
