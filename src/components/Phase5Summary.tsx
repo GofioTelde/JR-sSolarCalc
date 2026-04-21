@@ -1271,18 +1271,16 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
               </div>
 
               {/* Grand total */}
-              <div className="rounded-xl bg-purple-600 dark:bg-purple-700 p-4 text-white">
+              <div className="rounded-xl bg-purple-600 dark:bg-purple-700 p-4 text-white text-center">
                 <div>
-                  <div className="mb-2">
-                    <p className="font-bold text-lg leading-tight">
-                      Total estimado
-                    </p>
-                    <p className="text-[10px] text-purple-200">
-                      Sin IVA · precios orientativos
-                    </p>
-                  </div>
-                  <p className="font-bold text-2xl sm:text-3xl">
+                  <p className="font-bold text-lg leading-tight mb-1">
+                    Total estimado
+                  </p>
+                  <p className="font-bold text-2xl sm:text-3xl mb-2 break-words">
                     {grandTotal.toLocaleString("es-ES")} €
+                  </p>
+                  <p className="text-[10px] text-purple-200">
+                    Sin IVA · precios orientativos
                   </p>
                 </div>
                 {costEst?.annualSavingsEur && costEst.annualSavingsEur > 0 && (
