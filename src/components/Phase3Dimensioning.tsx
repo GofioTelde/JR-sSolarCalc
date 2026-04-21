@@ -43,7 +43,7 @@ function KpiCard({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 min-w-0 overflow-hidden">
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 leading-tight break-words">{label}</div>
+      <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-0.5 leading-tight break-words">{label}</div>
       <div className="leading-tight">
         <span className={`text-xl font-bold ${textCls}`}>{value}</span>
         {unit && (
@@ -544,7 +544,7 @@ const Phase3Dimensioning: React.FC<Props> = ({ onConfirm }) => {
       >
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <KpiCard
-            label="Nº paneles (ref.)"
+            label="Paneles (ref.)"
             value={calc.numPanels}
             unit="uds."
             color="orange"
@@ -556,7 +556,7 @@ const Phase3Dimensioning: React.FC<Props> = ({ onConfirm }) => {
             color="orange"
           />
           <KpiCard
-            label="Generación anual est."
+            label="Generación anual"
             value={calc.annualGenerationKWh.toFixed(0)}
             unit="kWh/año"
             color="green"
@@ -577,13 +577,13 @@ const Phase3Dimensioning: React.FC<Props> = ({ onConfirm }) => {
         >
           <div className="grid grid-cols-2 gap-3">
             <KpiCard
-              label="Capacidad útil necesaria"
+              label="Capacidad necesaria"
               value={calc.batteryCapacityNeededKWh.toFixed(2)}
               unit="kWh"
               color="green"
             />
             <KpiCard
-              label="Nº baterías (ref. 5kWh)"
+              label="Baterías (ref. 5kWh)"
               value={`~${calc.numBatteries}`}
               unit="uds."
               color="green"

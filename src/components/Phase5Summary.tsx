@@ -774,23 +774,23 @@ const Phase5Summary: React.FC<Props> = ({ onReset }) => {
 
             {/* Grand total */}
             <div className="rounded-xl bg-purple-600 dark:bg-purple-700 p-4 text-white">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-bold text-lg">Total estimado</p>
+              <div className="flex justify-between items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-lg leading-tight">Total estimado</p>
                   <p className="text-[10px] text-purple-200">Sin IVA · precios orientativos</p>
                 </div>
-                <p className="font-bold text-2xl">{grandTotal.toLocaleString("es-ES")} €</p>
+                <p className="font-bold text-xl sm:text-2xl flex-shrink-0 whitespace-nowrap">{grandTotal.toLocaleString("es-ES")} €</p>
               </div>
               {costEst?.annualSavingsEur && costEst.annualSavingsEur > 0 && (
-                <div className="mt-3 pt-3 border-t border-purple-500 flex justify-between text-sm">
-                  <span className="text-purple-200">Ahorro est. anual</span>
-                  <span className="font-semibold">{costEst.annualSavingsEur.toLocaleString("es-ES")} €/año</span>
+                <div className="mt-3 pt-3 border-t border-purple-500 flex justify-between gap-2 text-sm">
+                  <span className="text-purple-200 flex-1">Ahorro est. anual</span>
+                  <span className="font-semibold flex-shrink-0 whitespace-nowrap">{costEst.annualSavingsEur.toLocaleString("es-ES")} €/año</span>
                 </div>
               )}
               {costEst?.paybackYears && costEst.paybackYears > 0 && (
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-purple-200">Amortización estimada</span>
-                  <span className="font-semibold">~{costEst.paybackYears} años</span>
+                <div className="flex justify-between gap-2 text-sm mt-1">
+                  <span className="text-purple-200 flex-1">Amortización estimada</span>
+                  <span className="font-semibold flex-shrink-0 whitespace-nowrap">~{costEst.paybackYears} años</span>
                 </div>
               )}
             </div>

@@ -342,11 +342,11 @@ const MagneticCalculatorComponent: React.FC = () => {
           <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Declinación magnética</div>
-              <div className="text-xl font-bold text-yellow-700 dark:text-yellow-400">
+              <div className="text-xl font-bold text-yellow-700 dark:text-yellow-400 leading-tight">
                 {result.declination.toFixed(2)}°
-                <span className="text-xs font-normal ml-1 text-gray-600 dark:text-gray-400">
-                  hacia el {result.declinationDirection === "E" ? "Este" : "Oeste"}
-                </span>
+              </div>
+              <div className="text-xs font-normal text-gray-600 dark:text-gray-400 mt-0.5">
+                hacia el {result.declinationDirection === "E" ? "Este" : "Oeste"}
               </div>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
