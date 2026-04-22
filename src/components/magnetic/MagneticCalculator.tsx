@@ -372,7 +372,7 @@ const MagneticCalculatorComponent: React.FC = () => {
               <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200">
                 Ver datos magnéticos completos
               </summary>
-              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
                 {[
                   { label: "Inclinación", value: `${(result.additionalData.inclination ?? 0).toFixed(2)}°` },
                   { label: "Intensidad total", value: `${((result.additionalData.totalIntensity ?? 0) / 1000).toFixed(1)} µT` },
@@ -383,7 +383,7 @@ const MagneticCalculatorComponent: React.FC = () => {
                 ].map((d) => (
                   <div key={d.label} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
                     <div className="text-gray-400 dark:text-gray-500">{d.label}</div>
-                    <div className="font-semibold text-gray-700 dark:text-gray-300">{d.value}</div>
+                    <div className="font-semibold text-gray-700 dark:text-gray-300 break-words">{d.value}</div>
                   </div>
                 ))}
               </div>
